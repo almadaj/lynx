@@ -14,9 +14,11 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "users")
+@Builder
 public class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(updatable = false, nullable = false)
     private UUID id;
 
     @Column(length = 150, nullable = false)
@@ -25,18 +27,16 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(unique = true)
-    private String login;
-
-    @NonNull
+    @Column(nullable = false)
     private String password;
 
+    @Column
     private LocalDateTime birth;
 
-    @NonNull
+    @Column(name = "is_admin", nullable = false)
     private boolean isAdmin;
 
-    @NonNull
+    @Column(name = "is_active", nullable = false)
     private boolean isActive;
 
 }

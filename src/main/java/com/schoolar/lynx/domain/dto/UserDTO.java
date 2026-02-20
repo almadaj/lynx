@@ -14,6 +14,6 @@ public class UserDTO {
     private String email;
     private String password;
     private LocalDate birth;
-    private Boolean isActive;
-    private Boolean isAdmin;
+    private boolean isActive;
+    private boolean isAdmin;
 }

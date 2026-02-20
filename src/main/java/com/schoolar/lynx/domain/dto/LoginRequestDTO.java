@@ -1,0 +1,11 @@
+package com.schoolar.lynx.domain.dto;
+
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+public class LoginRequestDTO {
+    private String email;
+    private String password;
+}
