@@ -7,8 +7,11 @@ import com.schoolar.lynx.service.CompanyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.UUID;
 
@@ -20,13 +23,13 @@ public class CompanyController {
     private final CompanyService service;
 
     @PostMapping
-    public CompanyResponseDTO createCompany(@RequestBody RegisterCompanyDTO dto){
-        return service.create(dto);
+    public ResponseEntity<CompanyResponseDTO> createCompany(@RequestBody RegisterCompanyDTO dto){
+        return ResponseEntity.ok(service.create(dto));
     }
 
     @GetMapping("/{id}")
-    public CompanyResponseDTO findCompanyById(@PathVariable UUID id) {
-        return service.findById(id);
+    public ResponseEntity<CompanyResponseDTO> findById(@PathVariable UUID id) {
+        return ResponseEntity.ok(service.findById(id));
     }
 
     @DeleteMapping("/{id}")

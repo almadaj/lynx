@@ -16,5 +16,5 @@ public class CompanyResponseDTO {
     private String address;
     private boolean hasOnlineClass;
     private boolean isActive;
-    private UserResponseDTO principalTeacher;
+    private UUID principalTeacherId;
 }
