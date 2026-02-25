@@ -1,6 +1,7 @@
 package com.schoolar.lynx.domain.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
 import lombok.*;
 
 import java.util.UUID;
@@ -27,6 +28,7 @@ public class Company {
     private String companyName;
 
     @Column(nullable = false, unique = true)
+    @Email(message = "Email inválido")
     private String email;
 
     @Column

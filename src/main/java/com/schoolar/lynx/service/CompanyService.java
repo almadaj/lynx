@@ -2,6 +2,7 @@ package com.schoolar.lynx.service;
 
 import com.schoolar.lynx.domain.dto.CompanyResponseDTO;
 import com.schoolar.lynx.domain.dto.RegisterCompanyDTO;
+import com.schoolar.lynx.domain.dto.UpdateCompanyDTO;
 import com.schoolar.lynx.domain.model.Company;
 import com.schoolar.lynx.domain.model.User;
 import com.schoolar.lynx.repository.CompanyRepository;
@@ -55,6 +56,20 @@ public class CompanyService {
             );
         }
 
+        if (companyRepository.existsByEmail(dto.getEmail())) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Email já cadastrado"
+            );
+        }
+
+        if (companyRepository.existsByCnpj(dto.getCnpj())) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "CNPJ já cadastrado"
+            );
+        }
+
         Company company = MapperUtil.parseObject(dto, Company.class);
         company.setPrincipalTeacher(principal);
         Company savedCompany = companyRepository.save(company);
@@ -94,11 +109,18 @@ public class CompanyService {
 
     public void deleteById(UUID id){
         Company company = companyRepository.findById(id)
-                .orElseThrow(()-> new ResponseStatusException(
+                .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Empresa não encontrada"
                 ));
-        company.setActive(false);
-        companyRepository.save(company);
+        if (!company.isActive()) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Empresa já está inativa"
+            );
+        }else {
+            company.setActive(false);
+            companyRepository.save(company);
+        }
     }
 }

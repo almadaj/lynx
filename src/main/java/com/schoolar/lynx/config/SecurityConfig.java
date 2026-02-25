@@ -32,18 +32,6 @@ public class SecurityConfig {
                         .requestMatchers("/auth/**").permitAll()
                         .anyRequest().authenticated()
                 )
-                .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint((request, response, authException) -> {
-                            if (!response.isCommitted()) {
-                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
-                            }
-                        })
-                        .accessDeniedHandler((request, response, accessDeniedException) -> {
-                            if (!response.isCommitted()) {
-                                response.sendError(HttpServletResponse.SC_FORBIDDEN);
-                            }
-                        })
-                )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }

@@ -30,7 +30,6 @@ public class AuthService {
     }
 
     public LoginResponseDTO register(RegisterRequestDTO dto) {
-        //TODO: Validação de email
         if (userRepository.findByEmail(dto.getEmail()).isPresent()) {
             throw new RuntimeException("Email já cadastrado");
         }
