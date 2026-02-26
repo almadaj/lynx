@@ -4,6 +4,7 @@ import com.schoolar.lynx.domain.dto.LoginRequestDTO;
 import com.schoolar.lynx.domain.dto.LoginResponseDTO;
 import com.schoolar.lynx.domain.dto.RegisterRequestDTO;
 import com.schoolar.lynx.service.AuthService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,7 +24,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public LoginResponseDTO register (@RequestBody RegisterRequestDTO dto){
+    public LoginResponseDTO register (@Valid @RequestBody RegisterRequestDTO dto){
         return authService.register(dto);
     }
 }

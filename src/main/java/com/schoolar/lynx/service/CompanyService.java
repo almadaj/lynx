@@ -7,6 +7,7 @@ import com.schoolar.lynx.domain.model.Company;
 import com.schoolar.lynx.domain.model.User;
 import com.schoolar.lynx.repository.CompanyRepository;
 import com.schoolar.lynx.repository.UserRepository;
+import com.schoolar.lynx.security.AuthenticatedUserService;
 import com.schoolar.lynx.security.UserDetailsImpl;
 import com.schoolar.lynx.utils.MapperUtil;
 import lombok.RequiredArgsConstructor;
@@ -24,9 +25,8 @@ import java.util.UUID;
 public class CompanyService {
     private final CompanyRepository companyRepository;
     private final UserRepository userRepository;
+    private final AuthenticatedUserService authUserService;
 
-    //TODO: Validação do CNPJ
-    //TODO: Validação de duplicatas
     public CompanyResponseDTO create(RegisterCompanyDTO dto) {
         Authentication authentication = SecurityContextHolder
                 .getContext()
@@ -76,6 +76,30 @@ public class CompanyService {
         return MapperUtil.parseObject(savedCompany, CompanyResponseDTO.class);
     }
 
+    public CompanyResponseDTO findActiveInactiveById(UUID id){
+        Company company = companyRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Empresa não encontrada"
+                ));
+
+        CompanyResponseDTO dto = new CompanyResponseDTO();
+        dto.setId(company.getId());
+        dto.setPublicName(company.getPublicName());
+        dto.setCompanyName(company.getCompanyName());
+        dto.setEmail(company.getEmail());
+        dto.setPhone(company.getPhone());
+        dto.setCnpj(company.getCnpj());
+        dto.setAddress(company.getAddress());
+        dto.setHasOnlineClass(company.isHasOnlineClass());
+        dto.setActive(company.isActive());
+
+        if (company.getPrincipalTeacher() != null) {
+            dto.setPrincipalTeacherId(company.getPrincipalTeacher().getId());
+        }
+        return dto;
+    }
+
     public CompanyResponseDTO findById(UUID id) {
         Company company = companyRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -108,19 +132,88 @@ public class CompanyService {
     }
 
     public void deleteById(UUID id){
+        User loggedUser = authUserService.get();
+
         Company company = companyRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Empresa não encontrada"
                 ));
+
+        if (!company.getPrincipalTeacher().getId().equals(loggedUser.getId())) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Apenas o professor principal pode alterar esta empresa"
+            );
+        }
+
         if (!company.isActive()) {
             throw new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
                     "Empresa já está inativa"
             );
-        }else {
-            company.setActive(false);
-            companyRepository.save(company);
         }
+        company.setActive(false);
+        companyRepository.save(company);
+    }
+
+    @Transactional
+    public CompanyResponseDTO update(UUID id, UpdateCompanyDTO dto) {
+        User loggedUser = authUserService.get();
+
+        Company company = companyRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Empresa não encontrada"
+                ));
+
+        if (!company.getPrincipalTeacher().getId().equals(loggedUser.getId())) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Apenas o professor principal pode alterar esta empresa"
+            );
+        }
+
+        if (dto.getEmail() != null &&
+                !dto.getEmail().equals(company.getEmail()) &&
+                companyRepository.existsByEmail(dto.getEmail())) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Email já cadastrado"
+            );
+        }
+
+        if (dto.getCnpj() != null &&
+                !dto.getCnpj().equals(company.getCnpj()) &&
+                companyRepository.existsByCnpj(dto.getCnpj())) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "CNPJ já cadastrado"
+            );
+        }
+
+        if (dto.getPublicName() != null)
+            company.setPublicName(dto.getPublicName());
+
+        if (dto.getCompanyName() != null)
+            company.setCompanyName(dto.getCompanyName());
+
+        if (dto.getEmail() != null)
+            company.setEmail(dto.getEmail());
+
+        if (dto.getPhone() != null)
+            company.setPhone(dto.getPhone());
+
+        if (dto.getCnpj() != null)
+            company.setCnpj(dto.getCnpj());
+
+        if (dto.getAddress() != null)
+            company.setAddress(dto.getAddress());
+
+        company.setHasOnlineClass(dto.isHasOnlineClass());
+        company.setActive(dto.isActive());
+
+        CompanyResponseDTO savedCompany = findActiveInactiveById(id);
+        return savedCompany;
     }
 }

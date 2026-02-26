@@ -2,11 +2,13 @@ package com.schoolar.lynx.controller;
 
 import com.schoolar.lynx.domain.dto.CompanyResponseDTO;
 import com.schoolar.lynx.domain.dto.RegisterCompanyDTO;
+import com.schoolar.lynx.domain.dto.UpdateCompanyDTO;
 import com.schoolar.lynx.service.CompanyService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -33,8 +35,8 @@ public class CompanyController {
         service.deleteById(id);
     }
 
-//    @PutMapping("/{id}")
-//    public CompanyResponseDTO updateCompanyById(@PathVariable UUID id){
-//        return new CompanyResponseDTO();
-//    }
+    @PutMapping("/{id}")
+    public ResponseEntity<CompanyResponseDTO> updateCompanyById(@PathVariable UUID id, @Valid @RequestBody UpdateCompanyDTO dto){
+        return ResponseEntity.ok(service.update(id, dto));
+    }
 }
