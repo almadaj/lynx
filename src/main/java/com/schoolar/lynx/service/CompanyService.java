@@ -1,6 +1,7 @@
 package com.schoolar.lynx.service;
 
 import com.schoolar.lynx.domain.dto.CompanyResponseDTO;
+import com.schoolar.lynx.domain.dto.CompanySocialNetworkResponseDTO;
 import com.schoolar.lynx.domain.dto.RegisterCompanyDTO;
 import com.schoolar.lynx.domain.dto.UpdateCompanyDTO;
 import com.schoolar.lynx.domain.model.Company;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -128,6 +130,25 @@ public class CompanyService {
         if (company.getPrincipalTeacher() != null) {
             dto.setPrincipalTeacherId(company.getPrincipalTeacher().getId());
         }
+
+        List<CompanySocialNetworkResponseDTO> socials =
+                company.getSocialNetworks()
+                        .stream()
+                        .map(s -> {
+                            CompanySocialNetworkResponseDTO dtoSocial =
+                                    new CompanySocialNetworkResponseDTO();
+
+                            dtoSocial.setId(s.getId());
+                            dtoSocial.setSocialNetworkId(s.getSocialNetwork().getId());
+                            dtoSocial.setName(s.getSocialNetwork().getName());
+                            dtoSocial.setIcon(s.getSocialNetwork().getIcon());
+                            dtoSocial.setUrl(s.getUrl());
+
+                            return dtoSocial;
+                        })
+                        .toList();
+
+        dto.setSocialNetworks(socials);
         return dto;
     }
 

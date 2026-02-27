@@ -2,6 +2,8 @@ package com.schoolar.lynx.domain.dto;
 
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -17,4 +19,5 @@ public class CompanyResponseDTO {
     private boolean hasOnlineClass;
     private boolean isActive;
     private UUID principalTeacherId;
+    private List<CompanySocialNetworkResponseDTO> socialNetworks;
 }
