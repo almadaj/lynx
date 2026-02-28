@@ -10,6 +10,7 @@ import com.schoolar.lynx.repository.CompanyRepository;
 import com.schoolar.lynx.repository.CompanySocialNetworkRepository;
 import com.schoolar.lynx.repository.SocialNetworkRepository;
 import com.schoolar.lynx.security.AuthenticatedUserService;
+import com.schoolar.lynx.utils.MapperUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -28,9 +29,9 @@ public class CompanySocialNetworkService {
     private final AuthenticatedUserService authenticatedUserService;
 
     @Transactional
-    public void updateCompanySocialNetworks(
+    public CompanySocialNetworkResponseDTO addCompanySocialNetwork(
             UUID companyId,
-            List<CompanySocialNetworkRequestDTO> dtos) {
+            CompanySocialNetworkRequestDTO dto) {
 
         User loggedUser = authenticatedUserService.get();
 
@@ -42,28 +43,41 @@ public class CompanySocialNetworkService {
 
         if (!company.getPrincipalTeacher().getId()
                 .equals(loggedUser.getId())) {
+
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
-                    "Sem permissão para alterar redes sociais"
+                    "Sem permissão"
             );
         }
 
-        companySocialNetworkRepository.deleteByCompanyId(companyId);
-        for (CompanySocialNetworkRequestDTO dto : dtos) {
-            SocialNetwork socialNetwork = socialNetworkRepository
-                    .findById(dto.getSocialNetworkId())
-                    .orElseThrow(() -> new ResponseStatusException(
-                            HttpStatus.NOT_FOUND,
-                            "Rede social não encontrada"
-                    ));
+        if (companySocialNetworkRepository
+                .existsByCompanyIdAndSocialNetworkId(
+                        companyId,
+                        dto.getSocialNetworkId())) {
 
-            CompanySocialNetwork entity = new CompanySocialNetwork();
-            entity.setCompany(company);
-            entity.setSocialNetwork(socialNetwork);
-            entity.setUrl(dto.getUrl());
-            companySocialNetworkRepository.save(entity);
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Rede já vinculada"
+            );
         }
+
+        SocialNetwork socialNetwork = socialNetworkRepository
+                .findById(dto.getSocialNetworkId())
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Rede social não encontrada"
+                ));
+
+        CompanySocialNetwork entity = new CompanySocialNetwork();
+        entity.setCompany(company);
+        entity.setSocialNetwork(socialNetwork);
+        entity.setUrl(dto.getUrl());
+
+        CompanySocialNetwork finalDto = companySocialNetworkRepository.save(entity);
+
+        return MapperUtil.parseObject(finalDto, CompanySocialNetworkResponseDTO.class) ;
     }
+
 
     public List<CompanySocialNetworkResponseDTO> findAllSocialNetworksByCompany (UUID companyId){
         User loggedUser = authenticatedUserService.get();
