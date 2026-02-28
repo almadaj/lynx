@@ -16,6 +16,7 @@ import java.util.UUID;
 public class CompanySocialNetworkController {
 
     private final CompanySocialNetworkService service;
+
     @GetMapping("/{companyId}/social")
     public ResponseEntity<List<CompanySocialNetworkResponseDTO>> findAll(
             @PathVariable UUID companyId) {
@@ -27,5 +28,20 @@ public class CompanySocialNetworkController {
             @PathVariable UUID companyId,
             @RequestBody CompanySocialNetworkRequestDTO dto){
         return ResponseEntity.ok(service.addCompanySocialNetwork(companyId, dto));
+    }
+
+    @DeleteMapping("/{companyId}/social/{companySocialId}")
+    public void removeFromCompany(
+            @PathVariable UUID companyId,
+            @PathVariable UUID companySocialId) {
+        service.removeCompanySocialNetwork(companyId, companySocialId);
+    }
+
+    @PutMapping("/{companyId}/social/{companySocialId}")
+    public CompanySocialNetworkResponseDTO updateCompanySocial(
+            @PathVariable UUID companyId,
+            @PathVariable UUID companySocialId,
+            @RequestBody CompanySocialNetworkRequestDTO dto) {
+        return service.updateCompanySocialNetwork(companyId, companySocialId, dto);
     }
 }

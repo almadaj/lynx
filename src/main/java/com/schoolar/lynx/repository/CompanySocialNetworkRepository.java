@@ -17,6 +17,18 @@ public interface CompanySocialNetworkRepository
     boolean existsByCompanyIdAndSocialNetworkId(UUID companyId, UUID socialNetworkId);
 
     @Modifying
+    @Query("""
+    DELETE FROM CompanySocialNetwork csn
+    WHERE csn.id = :id
+    AND csn.company.id = :companyId
+    """)
+    void deleteByIdAndCompanyId(
+            @Param("id") UUID id,
+            @Param("companyId") UUID companyId
+    );
+
+
+    @Modifying
     @Query("DELETE FROM CompanySocialNetwork csn WHERE csn.company.id = :companyId")
     void deleteByCompanyId(@Param("companyId") UUID companyId);
 }

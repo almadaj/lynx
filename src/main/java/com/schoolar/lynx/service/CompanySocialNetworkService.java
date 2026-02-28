@@ -43,7 +43,6 @@ public class CompanySocialNetworkService {
 
         if (!company.getPrincipalTeacher().getId()
                 .equals(loggedUser.getId())) {
-
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
                     "Sem permissão"
@@ -54,7 +53,6 @@ public class CompanySocialNetworkService {
                 .existsByCompanyIdAndSocialNetworkId(
                         companyId,
                         dto.getSocialNetworkId())) {
-
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
                     "Rede já vinculada"
@@ -74,10 +72,8 @@ public class CompanySocialNetworkService {
         entity.setUrl(dto.getUrl());
 
         CompanySocialNetwork finalDto = companySocialNetworkRepository.save(entity);
-
         return MapperUtil.parseObject(finalDto, CompanySocialNetworkResponseDTO.class) ;
     }
-
 
     public List<CompanySocialNetworkResponseDTO> findAllSocialNetworksByCompany (UUID companyId){
         User loggedUser = authenticatedUserService.get();
@@ -104,5 +100,83 @@ public class CompanySocialNetworkService {
                     return dto;
                 })
                 .toList();
+    }
+
+    @Transactional
+    public void removeCompanySocialNetwork(UUID companyId, UUID companySocialId) {
+
+        User loggedUser = authenticatedUserService.get();
+
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Empresa não encontrada"
+                ));
+
+        if (!company.getPrincipalTeacher().getId()
+                .equals(loggedUser.getId())) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Sem permissão"
+            );
+        }
+
+        CompanySocialNetwork companySocialNetwork =
+                companySocialNetworkRepository.findById(companySocialId)
+                        .orElseThrow(() -> new ResponseStatusException(
+                                HttpStatus.NOT_FOUND,
+                                "Rede vinculada não encontrada"
+                        ));
+
+        if (!companySocialNetwork.getCompany().getId().equals(companyId)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Rede não pertence a essa empresa"
+            );
+        }
+        companySocialNetworkRepository.deleteByIdAndCompanyId(companySocialId, companyId);
+    }
+
+    @Transactional
+    public CompanySocialNetworkResponseDTO updateCompanySocialNetwork(
+            UUID companyId,
+            UUID companySocialId,
+            CompanySocialNetworkRequestDTO dto
+    ) {
+
+        User loggedUser = authenticatedUserService.get();
+
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Empresa não encontrada"
+                ));
+
+        if (!company.getPrincipalTeacher().getId()
+                .equals(loggedUser.getId())) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Sem permissão"
+            );
+        }
+
+        CompanySocialNetwork companySocialNetwork =
+                companySocialNetworkRepository.findById(companySocialId)
+                        .orElseThrow(() -> new ResponseStatusException(
+                                HttpStatus.NOT_FOUND,
+                                "Rede vinculada não encontrada"
+                        ));
+
+        if (!companySocialNetwork.getCompany().getId().equals(companyId)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Rede não pertence a essa empresa"
+            );
+        }
+        companySocialNetwork.setUrl(dto.getUrl());
+
+        CompanySocialNetwork csn = companySocialNetworkRepository.save(companySocialNetwork);
+        return MapperUtil.parseObject(csn, CompanySocialNetworkResponseDTO.class);
     }
 }
