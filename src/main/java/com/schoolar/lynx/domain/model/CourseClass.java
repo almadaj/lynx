@@ -3,7 +3,11 @@ package com.schoolar.lynx.domain.model;
 import com.schoolar.lynx.domain.enums.Language;
 import com.schoolar.lynx.domain.enums.LanguageLevel;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -36,6 +40,8 @@ public class CourseClass {
     @Column(nullable = false)
     private Language language;
 
+    @Min(1)
+    @Max(100)
     private int maxStudents;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -51,9 +57,11 @@ public class CourseClass {
 
     private LocalDateTime endDate;
 
+    @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @UpdateTimestamp
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 

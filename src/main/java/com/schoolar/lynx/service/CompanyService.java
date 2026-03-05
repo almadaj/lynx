@@ -191,7 +191,7 @@ public class CompanyService {
         if (!company.getPrincipalTeacher().getId().equals(loggedUser.getId())) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
-                    "Apenas o professor principal pode alterar esta empresa"
+                    "Apenas o diretor pode alterar esta empresa"
             );
         }
 
