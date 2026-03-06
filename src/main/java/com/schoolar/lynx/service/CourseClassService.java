@@ -18,6 +18,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 public class CourseClassService {
@@ -27,8 +29,7 @@ public class CourseClassService {
     private final CompanyRepository companyRepository;
     private final AuthenticatedUserService authenticatedUserService;
 
-    //TODO: implementar métodos
-    public CourseClassResponseDTO create (@RequestBody CourseClassCreateDTO dto){
+    public CourseClassResponseDTO create (CourseClassCreateDTO dto){
         CourseClass finalDto = new CourseClass();
         User loggedUser = authenticatedUserService.get();
 
@@ -76,5 +77,15 @@ public class CourseClassService {
 
         courseRepository.save(finalDto);
         return MapperUtil.parseObject(finalDto, CourseClassResponseDTO.class);
+    }
+
+    //TODO: terminar de ajustar esse método
+    public CourseClassResponseDTO findById(UUID id){
+        CourseClass course = courseRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Turma não encontrada"
+                ));
+        return MapperUtil.parseObject(course, CourseClassResponseDTO.class);
     }
 }
