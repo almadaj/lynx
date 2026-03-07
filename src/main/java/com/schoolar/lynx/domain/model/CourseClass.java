@@ -42,7 +42,7 @@ public class CourseClass {
 
     @Min(1)
     @Max(100)
-    private int maxStudents;
+    private Integer maxStudents;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "teacher_id")

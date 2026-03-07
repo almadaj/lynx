@@ -1,8 +1,8 @@
 package com.schoolar.lynx.service;
 
-import com.schoolar.lynx.domain.dto.CompanySocialNetworkResponseDTO;
 import com.schoolar.lynx.domain.dto.CourseClassCreateDTO;
 import com.schoolar.lynx.domain.dto.CourseClassResponseDTO;
+import com.schoolar.lynx.domain.dto.CourseClassUpdateDTO;
 import com.schoolar.lynx.domain.model.Company;
 import com.schoolar.lynx.domain.model.CourseClass;
 import com.schoolar.lynx.domain.model.User;
@@ -15,7 +15,7 @@ import com.schoolar.lynx.utils.MapperUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.UUID;
@@ -79,13 +79,89 @@ public class CourseClassService {
         return MapperUtil.parseObject(finalDto, CourseClassResponseDTO.class);
     }
 
-    //TODO: terminar de ajustar esse método
+
     public CourseClassResponseDTO findById(UUID id){
+        User loggedUser = authenticatedUserService.get();
+
+        if (loggedUser == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED
+            );
+        }
+
         CourseClass course = courseRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Turma não encontrada"
                 ));
+        return MapperUtil.parseObject(course, CourseClassResponseDTO.class);
+    }
+
+    @Transactional
+    public CourseClassResponseDTO update(UUID id, CourseClassUpdateDTO dto){
+
+        User loggedUser = authenticatedUserService.get();
+
+        if (!loggedUser.isAdmin()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
+
+        CourseClass course = courseRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Turma não encontrada"
+                ));
+
+        Company company = course.getCompany();
+
+        if (!loggedUser.getId().equals(company.getPrincipalTeacher().getId())){
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Somente diretor pode fazer alterações"
+            );
+        }
+
+        if (dto.getTeacherId() != null) {
+            User teacher = userRepository.findById(dto.getTeacherId())
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.NOT_FOUND,
+                            "Professor não encontrado"
+                    ));
+
+            if (!teacher.isAdmin()){
+                throw new ResponseStatusException(
+                        HttpStatus.FORBIDDEN,
+                        "Estudantes não podem gerenciar turmas"
+                );
+            }
+
+            course.setTeacher(teacher);
+        }
+
+        if (dto.getLanguage() != null) {
+            course.setLanguage(dto.getLanguage());
+        }
+
+        if (dto.getLevel() != null) {
+            course.setLevel(dto.getLevel());
+        }
+
+        if (dto.getName() != null) {
+            course.setName(dto.getName());
+        }
+
+        if (dto.getMaxStudents() != null) {
+            course.setMaxStudents(dto.getMaxStudents());
+        }
+
+        if (dto.getStartDate() != null) {
+            course.setStartDate(dto.getStartDate());
+        }
+
+        if (dto.getEndDate() != null) {
+            course.setEndDate(dto.getEndDate());
+        }
+
         return MapperUtil.parseObject(course, CourseClassResponseDTO.class);
     }
 }

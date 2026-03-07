@@ -2,9 +2,11 @@ package com.schoolar.lynx.controller;
 
 import com.schoolar.lynx.domain.dto.CourseClassCreateDTO;
 import com.schoolar.lynx.domain.dto.CourseClassResponseDTO;
+import com.schoolar.lynx.domain.dto.CourseClassUpdateDTO;
 import com.schoolar.lynx.service.CourseClassService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -21,8 +23,13 @@ public class CourseClassController {
         return service.create(dto);
     }
 
-    @GetMapping
+    @GetMapping("/{id}")
     public CourseClassResponseDTO findById(@PathVariable UUID id){
         return service.findById(id);
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<CourseClassResponseDTO> update(@PathVariable UUID id, @RequestBody CourseClassUpdateDTO dto){
+        return ResponseEntity.ok(service.update(id, dto));
     }
 }

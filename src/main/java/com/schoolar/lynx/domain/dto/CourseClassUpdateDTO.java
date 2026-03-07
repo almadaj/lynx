@@ -12,17 +12,12 @@ import java.util.UUID;
 
 @Getter
 @Setter
-public class CourseClassResponseDTO {
-    private UUID id;
+public class CourseClassUpdateDTO {
     private String name;
     private LanguageLevel level;
     private Language language;
     private Integer maxStudents;
     private UUID teacherId;
-    private UUID companyId;
     private LocalDateTime startDate;
     private LocalDateTime endDate;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-    private List<User> students;
 }
