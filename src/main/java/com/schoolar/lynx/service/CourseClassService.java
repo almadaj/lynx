@@ -3,6 +3,7 @@ package com.schoolar.lynx.service;
 import com.schoolar.lynx.domain.dto.CourseClassCreateDTO;
 import com.schoolar.lynx.domain.dto.CourseClassResponseDTO;
 import com.schoolar.lynx.domain.dto.CourseClassUpdateDTO;
+import com.schoolar.lynx.domain.dto.StudentSummaryDTO;
 import com.schoolar.lynx.domain.model.Company;
 import com.schoolar.lynx.domain.model.CourseClass;
 import com.schoolar.lynx.domain.model.User;
@@ -18,13 +19,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class CourseClassService {
     private final CourseClassRepository courseRepository;
-    private final CourseClassStudentRepository courseStudentRepository;
     private final UserRepository userRepository;
     private final CompanyRepository companyRepository;
     private final AuthenticatedUserService authenticatedUserService;
@@ -80,6 +81,8 @@ public class CourseClassService {
     }
 
 
+    //TODO: ajustar montagem do objeto students, está retornando somente o id porem o objeto todo
+    //Ver chat
     public CourseClassResponseDTO findById(UUID id){
         User loggedUser = authenticatedUserService.get();
 
@@ -94,6 +97,7 @@ public class CourseClassService {
                         HttpStatus.NOT_FOUND,
                         "Turma não encontrada"
                 ));
+
         return MapperUtil.parseObject(course, CourseClassResponseDTO.class);
     }
 
@@ -163,5 +167,31 @@ public class CourseClassService {
         }
 
         return MapperUtil.parseObject(course, CourseClassResponseDTO.class);
+    }
+
+    @Transactional
+    public void deleteById(UUID id){
+        User loggedUser = authenticatedUserService.get();
+
+        if (loggedUser == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED
+            );
+        }
+
+        CourseClass course = courseRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Turma não encontrada"
+                ));
+
+        Company company = course.getCompany();
+        if (!loggedUser.getId().equals(company.getPrincipalTeacher().getId())){
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Somente diretor pode fazer alterações"
+            );
+        }
+        courseRepository.deleteById(id);
     }
 }

@@ -32,4 +32,9 @@ public class CourseClassController {
     public ResponseEntity<CourseClassResponseDTO> update(@PathVariable UUID id, @RequestBody CourseClassUpdateDTO dto){
         return ResponseEntity.ok(service.update(id, dto));
     }
+
+    @DeleteMapping("/{id}")
+    public void deleteById(@PathVariable UUID id){
+        service.deleteById(id);
+    }
 }

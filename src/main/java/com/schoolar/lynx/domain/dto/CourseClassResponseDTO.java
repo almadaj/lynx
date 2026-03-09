@@ -24,5 +24,5 @@ public class CourseClassResponseDTO {
     private LocalDateTime endDate;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private List<User> students;
+    private List<StudentSummaryDTO> students;
 }
