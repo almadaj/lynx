@@ -72,6 +72,14 @@ public class CourseClassStudentsService {
             );
         }
 
+        if (courseClass.getEndDate() != null &&
+                courseClass.getEndDate().isBefore(LocalDateTime.now())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Turma está desativada"
+            );
+        }
+
         if (repository.existsByCourseClassIdAndStudentId(classId, student.getId())){
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
@@ -79,12 +87,47 @@ public class CourseClassStudentsService {
             );
         }
 
-
         CourseClassStudent enrollment = new CourseClassStudent();
         enrollment.setCourseClass(courseClass);
         enrollment.setStudent(student);
         enrollment.setEnrollmentDate(LocalDateTime.now());
 
         repository.save(enrollment);
+    }
+
+    @Transactional
+    public void removeStudent(UUID classId, UUID studentId) {
+        User loggedUser = authService.get();
+
+        if (!loggedUser.isAdmin()){
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Somente professores podem fazer alterações"
+            );
+        }
+
+        CourseClass courseClass = courseClassRepository.findById(classId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Turma não encontrada"
+                ));
+
+        if (!loggedUser.getId().equals(courseClass.getTeacher().getId()) &&
+                !loggedUser.getId().equals(courseClass.getCompany().getPrincipalTeacher().getId())) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Somente professor da disciplina ou coordenador podem fazer alterações"
+            );
+        }
+
+        CourseClassStudent enrollment = repository
+                .findByCourseClassIdAndStudentId(classId, studentId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Aluno não está matriculado nesta turma"
+                ));
+
+        repository.delete(enrollment);
     }
 }

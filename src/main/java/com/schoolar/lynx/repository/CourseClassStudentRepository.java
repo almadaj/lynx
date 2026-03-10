@@ -3,8 +3,10 @@ package com.schoolar.lynx.repository;
 import com.schoolar.lynx.domain.model.CourseClassStudent;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 public interface CourseClassStudentRepository extends JpaRepository<CourseClassStudent, UUID> {
     boolean existsByCourseClassIdAndStudentId(UUID courseClassId, UUID studentId);
+    Optional<CourseClassStudent> findByCourseClassIdAndStudentId(UUID classId, UUID studentId);
 }

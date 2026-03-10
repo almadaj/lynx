@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -80,30 +81,47 @@ public class CourseClassService {
         return MapperUtil.parseObject(finalDto, CourseClassResponseDTO.class);
     }
 
-
-    //TODO: ajustar montagem do objeto students, está retornando somente o id porem o objeto todo
-    //Ver chat
     public CourseClassResponseDTO findById(UUID id){
-        User loggedUser = authenticatedUserService.get();
+        authenticatedUserService.get();
 
-        if (loggedUser == null) {
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED
-            );
-        }
-
-        CourseClass course = courseRepository.findById(id)
+        CourseClass course = courseRepository.findByIdWithStudents(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Turma não encontrada"
                 ));
 
-        return MapperUtil.parseObject(course, CourseClassResponseDTO.class);
+        if (course.getEndDate() != null &&
+                course.getEndDate().isBefore(LocalDateTime.now())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Turma está desativada"
+            );
+        }
+
+        CourseClassResponseDTO dto =
+                MapperUtil.parseObject(course, CourseClassResponseDTO.class);
+
+        List<StudentSummaryDTO> students = course.getStudents()
+                .stream()
+                .map(enrollment -> {
+                    User student = enrollment.getStudent();
+
+                    StudentSummaryDTO s = new StudentSummaryDTO();
+                    s.setId(student.getId());
+                    s.setName(student.getName());
+                    s.setEmail(student.getEmail());
+                    s.setBirth(student.getBirth());
+
+                    return s;
+                })
+                .toList();
+
+        dto.setStudents(students);
+        return dto;
     }
 
     @Transactional
     public CourseClassResponseDTO update(UUID id, CourseClassUpdateDTO dto){
-
         User loggedUser = authenticatedUserService.get();
 
         if (!loggedUser.isAdmin()) {
