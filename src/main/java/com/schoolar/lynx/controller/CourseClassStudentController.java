@@ -24,5 +24,5 @@ public class CourseClassStudentController {
     public void removeStudent (@PathVariable UUID courseId, @PathVariable UUID studentId){
         service.removeStudent(courseId, studentId);
     }
-    //TODO: futuramente fazer add e remove em massa
+    //TODO: futuramente fazer add, transfer e remove em massa
 }

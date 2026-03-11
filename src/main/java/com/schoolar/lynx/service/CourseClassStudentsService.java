@@ -25,7 +25,7 @@ public class CourseClassStudentsService {
     private final UserRepository userRepository;
     private final AuthenticatedUserService authService;
 
-    //TODO: terminar métodos
+    //TODO: fazer metodos minhasTurmas(prof e aluno) e transferir aluno
     @Transactional
     public void addStudent(UUID classId, StudentsToCourseClassDTO dto) {
         User loggedUser = authService.get();
