@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -25,7 +26,7 @@ public class CourseClassStudentsService {
     private final UserRepository userRepository;
     private final AuthenticatedUserService authService;
 
-    //TODO: fazer metodos minhasTurmas(prof e aluno) e transferir aluno
+    //TODO: fazer métodos minhasTurmas(prof e aluno) e transferir aluno
     @Transactional
     public void addStudent(UUID classId, StudentsToCourseClassDTO dto) {
         User loggedUser = authService.get();
@@ -129,5 +130,70 @@ public class CourseClassStudentsService {
                 ));
 
         repository.delete(enrollment);
+    }
+
+    //TODO: Testar depois, agora to com sono
+    @Transactional
+    public void transferStudent(UUID classId, UUID studentId, UUID newClassId){
+        User loggedUser = authService.get();
+
+        if (!loggedUser.isAdmin()){
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Somente professores podem fazer alterações"
+            );
+        }
+
+        CourseClass courseClass = courseClassRepository.findById(classId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Turma não encontrada"
+                ));
+
+        CourseClass newCourseClass = courseClassRepository.findById(newClassId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Turma destino não encontrada"
+                ));
+
+        if (!loggedUser.getId().equals(courseClass.getCompany().getPrincipalTeacher().getId())) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Somente coordenador pode fazer essa alteração"
+            );
+        }
+
+        CourseClassStudent enrollment = repository
+                .findByCourseClassIdAndStudentId(classId, studentId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Aluno não está matriculado nesta turma"
+                ));
+
+        if (repository.existsByCourseClassIdAndStudentId(newClassId, studentId)){
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Aluno já está matriculado na turma destino"
+            );
+        }
+
+        if (newCourseClass.getStudents().size() >= newCourseClass.getMaxStudents()){
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Turma destino atingiu o limite de alunos"
+            );
+        }
+
+        if (courseClass.getEndDate() != null &&
+                courseClass.getEndDate().isBefore(LocalDateTime.now())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Turma está desativada"
+            );
+        }
+
+        enrollment.setCourseClass(newCourseClass);
+        repository.save(enrollment);
     }
 }
