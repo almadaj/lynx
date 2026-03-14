@@ -21,6 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -31,7 +32,6 @@ public class CourseClassService {
     private final CompanyRepository companyRepository;
     private final AuthenticatedUserService authenticatedUserService;
 
-    //TODO: fazer métodos minhasTurmas(prof e aluno, instituição)
     public CourseClassResponseDTO create (CourseClassCreateDTO dto){
         CourseClass finalDto = new CourseClass();
         User loggedUser = authenticatedUserService.get();
@@ -214,4 +214,26 @@ public class CourseClassService {
         courseRepository.deleteById(id);
     }
 
+    public List<CourseClassResponseDTO> findMyCourseClasses() {
+        User loggedUser = authenticatedUserService.get();
+        List<CourseClass> classes;
+
+        if (!loggedUser.isAdmin()) {
+            classes = courseRepository
+                    .findClassesByStudentId(loggedUser.getId());
+        } else {
+            Optional<Company> company =
+                    companyRepository.findByPrincipalTeacherId(loggedUser.getId());
+
+            //TODO: ajustar aqui, não está retornando todas as turmas de uma company
+            if (company.isPresent()) {
+                classes = courseRepository
+                        .findByCompanyIdWithStudents(company.get().getId());
+            } else {
+                classes = courseRepository
+                        .findByTeacherIdWithStudents(loggedUser.getId());
+            }
+        }
+        return MapperUtil.parseListObjects(classes, CourseClassResponseDTO.class);
+    }
 }

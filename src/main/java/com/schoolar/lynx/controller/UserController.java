@@ -31,4 +31,9 @@ public class UserController {
     public ResponseEntity<UserResponseDTO> findUserById(@PathVariable UUID id) {
         return ResponseEntity.ok(service.findById(id));
     }
+
+    @GetMapping("/me")
+    public ResponseEntity<UserResponseDTO> findMyInfo(){
+        return ResponseEntity.ok(service.getOwnInfo());
+    }
 }

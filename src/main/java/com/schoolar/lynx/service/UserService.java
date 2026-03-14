@@ -4,6 +4,7 @@ import com.schoolar.lynx.domain.dto.UserDTO;
 import com.schoolar.lynx.domain.dto.UserResponseDTO;
 import com.schoolar.lynx.domain.model.User;
 import com.schoolar.lynx.repository.UserRepository;
+import com.schoolar.lynx.security.AuthenticatedUserService;
 import com.schoolar.lynx.utils.MapperUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,12 +17,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository repository;
-
-    public UserResponseDTO create(UserDTO dto){
-        var userEntity = MapperUtil.parseObject(dto, User.class);
-        var savedUser = repository.save(userEntity);
-        return MapperUtil.parseObject(savedUser, UserResponseDTO.class);
-    }
+    private final AuthenticatedUserService authenticatedUserService;
 
     public UserResponseDTO findById(UUID id) {
         User user = repository.findById(id)
@@ -69,5 +65,12 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
         user.setActive(false);
         repository.save(user);
+    }
+
+    public UserResponseDTO getOwnInfo(){
+        User loggedUser = authenticatedUserService.get();
+        User user = repository.findById(loggedUser.getId())
+                .orElseThrow(()-> new RuntimeException("Usuário não encontrado"));
+        return MapperUtil.parseObject(user, UserResponseDTO.class);
     }
 }
