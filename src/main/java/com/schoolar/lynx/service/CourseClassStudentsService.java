@@ -1,5 +1,6 @@
 package com.schoolar.lynx.service;
 
+import com.schoolar.lynx.domain.dto.CourseClassResponseDTO;
 import com.schoolar.lynx.domain.dto.StudentsToCourseClassDTO;
 import com.schoolar.lynx.domain.model.CourseClass;
 import com.schoolar.lynx.domain.model.CourseClassStudent;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -26,7 +28,6 @@ public class CourseClassStudentsService {
     private final UserRepository userRepository;
     private final AuthenticatedUserService authService;
 
-    //TODO: fazer métodos minhasTurmas(prof e aluno) e transferir aluno
     @Transactional
     public void addStudent(UUID classId, StudentsToCourseClassDTO dto) {
         User loggedUser = authService.get();
@@ -132,7 +133,6 @@ public class CourseClassStudentsService {
         repository.delete(enrollment);
     }
 
-    //TODO: Testar depois, agora to com sono
     @Transactional
     public void transferStudent(UUID classId, UUID studentId, UUID newClassId){
         User loggedUser = authService.get();
@@ -157,7 +157,6 @@ public class CourseClassStudentsService {
                 ));
 
         if (!loggedUser.getId().equals(courseClass.getCompany().getPrincipalTeacher().getId())) {
-
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
                     "Somente coordenador pode fazer essa alteração"

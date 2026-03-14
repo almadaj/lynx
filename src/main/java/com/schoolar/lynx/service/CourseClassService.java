@@ -31,6 +31,7 @@ public class CourseClassService {
     private final CompanyRepository companyRepository;
     private final AuthenticatedUserService authenticatedUserService;
 
+    //TODO: fazer métodos minhasTurmas(prof e aluno, instituição)
     public CourseClassResponseDTO create (CourseClassCreateDTO dto){
         CourseClass finalDto = new CourseClass();
         User loggedUser = authenticatedUserService.get();
@@ -212,4 +213,5 @@ public class CourseClassService {
         }
         courseRepository.deleteById(id);
     }
+
 }
