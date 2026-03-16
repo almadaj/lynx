@@ -214,6 +214,7 @@ public class CourseClassService {
         courseRepository.deleteById(id);
     }
 
+    //TODO: criar um mapper para conseguir retornar id, nome, birth dos alunos
     public List<CourseClassResponseDTO> findMyCourseClasses() {
         User loggedUser = authenticatedUserService.get();
         List<CourseClass> classes;
@@ -222,17 +223,31 @@ public class CourseClassService {
             classes = courseRepository
                     .findClassesByStudentId(loggedUser.getId());
         } else {
-            Optional<Company> company =
-                    companyRepository.findByPrincipalTeacherId(loggedUser.getId());
+            classes = courseRepository
+                    .findByTeacherIdWithStudents(loggedUser.getId());
+        }
+        return MapperUtil.parseListObjects(classes, CourseClassResponseDTO.class);
+    }
 
-            //TODO: ajustar aqui, não está retornando todas as turmas de uma company
-            if (company.isPresent()) {
-                classes = courseRepository
-                        .findByCompanyIdWithStudents(company.get().getId());
-            } else {
-                classes = courseRepository
-                        .findByTeacherIdWithStudents(loggedUser.getId());
-            }
+    public List<CourseClassResponseDTO> findAllCourseClasses(){
+        User loggedUser = authenticatedUserService.get();
+        List<CourseClass> classes;
+        boolean isPrincipal =
+            companyRepository.findByPrincipalTeacherId(loggedUser.getId()).isPresent();
+
+        if (loggedUser.isAdmin() && isPrincipal){
+            Company company = companyRepository
+                .findByPrincipalTeacherId(loggedUser.getId())
+                .get();
+
+            classes = courseRepository
+                .findByCompanyIdWithStudents(company.getId());
+
+        } else {
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Somente Diretor pode ter acesso a lista de turmas"
+            );
         }
         return MapperUtil.parseListObjects(classes, CourseClassResponseDTO.class);
     }

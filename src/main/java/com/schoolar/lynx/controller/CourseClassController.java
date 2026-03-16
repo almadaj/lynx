@@ -43,4 +43,9 @@ public class CourseClassController {
     public List<CourseClassResponseDTO> getMyClassCourses(){
        return service.findMyCourseClasses();
     }
+
+    @GetMapping("/all")
+    public List<CourseClassResponseDTO> getAllCourses(){
+        return service.findAllCourseClasses();
+    }
 }
