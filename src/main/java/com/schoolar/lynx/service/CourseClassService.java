@@ -4,6 +4,7 @@ import com.schoolar.lynx.domain.dto.CourseClassCreateDTO;
 import com.schoolar.lynx.domain.dto.CourseClassResponseDTO;
 import com.schoolar.lynx.domain.dto.CourseClassUpdateDTO;
 import com.schoolar.lynx.domain.dto.StudentSummaryDTO;
+import com.schoolar.lynx.domain.mapper.CourseClassMapper;
 import com.schoolar.lynx.domain.model.Company;
 import com.schoolar.lynx.domain.model.CourseClass;
 import com.schoolar.lynx.domain.model.User;
@@ -216,6 +217,7 @@ public class CourseClassService {
 
     //TODO: criar um mapper para conseguir retornar id, nome, birth dos alunos
     public List<CourseClassResponseDTO> findMyCourseClasses() {
+
         User loggedUser = authenticatedUserService.get();
         List<CourseClass> classes;
 
@@ -226,7 +228,10 @@ public class CourseClassService {
             classes = courseRepository
                     .findByTeacherIdWithStudents(loggedUser.getId());
         }
-        return MapperUtil.parseListObjects(classes, CourseClassResponseDTO.class);
+
+        return classes.stream()
+                .map(CourseClassMapper::toDTO)
+                .toList();
     }
 
     public List<CourseClassResponseDTO> findAllCourseClasses(){
@@ -249,6 +254,8 @@ public class CourseClassService {
                     "Somente Diretor pode ter acesso a lista de turmas"
             );
         }
-        return MapperUtil.parseListObjects(classes, CourseClassResponseDTO.class);
+        return classes.stream()
+                .map(CourseClassMapper::toDTO)
+                .toList();
     }
 }

@@ -40,8 +40,8 @@ public interface CourseClassRepository extends JpaRepository<CourseClass, UUID> 
     @Query("""
     SELECT DISTINCT c
     FROM CourseClass c
-    LEFT JOIN FETCH c.students s
-    LEFT JOIN FETCH s.student
+    LEFT JOIN FETCH c.students cs
+    LEFT JOIN FETCH cs.student
     WHERE c.company.id = :companyId
     """)
     List<CourseClass> findByCompanyIdWithStudents(UUID companyId);
