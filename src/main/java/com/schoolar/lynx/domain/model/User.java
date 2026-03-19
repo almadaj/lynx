@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import lombok.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -33,7 +34,7 @@ public class User {
     private String password;
 
     @Column
-    private LocalDateTime birth;
+    private LocalDate birth;
 
     @Column(name = "is_admin", nullable = false)
     private boolean isAdmin;

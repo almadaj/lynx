@@ -2,17 +2,20 @@ package com.schoolar.lynx.service;
 
 import com.schoolar.lynx.domain.dto.CompanyResponseDTO;
 import com.schoolar.lynx.domain.dto.RegisterCompanyDTO;
-import com.schoolar.lynx.domain.dto.UserResponseDTO;
 import com.schoolar.lynx.domain.model.Company;
 import com.schoolar.lynx.domain.model.User;
 import com.schoolar.lynx.repository.CompanyRepository;
 import com.schoolar.lynx.repository.UserRepository;
+import com.schoolar.lynx.security.UserDetailsImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -58,15 +61,34 @@ class CompanyServiceTest {
 
     @Test
     void shouldCreateCompanySuccessfully() {
+        Authentication authentication = mock(Authentication.class);
+        SecurityContext securityContext = mock(SecurityContext.class);
+
+        UserDetailsImpl userDetails = mock(UserDetailsImpl.class);
+
+        when(userDetails.getUsername()).thenReturn("user@email.com");
+
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getPrincipal()).thenReturn(userDetails);
+
+        SecurityContextHolder.setContext(securityContext);
+
+        principal.setAdmin(true);
+
         RegisterCompanyDTO dto = new RegisterCompanyDTO();
         dto.setPublicName("Sample School");
         dto.setCompanyName("Sample School Inc.");
         dto.setCnpj("0000000000000");
         dto.setEmail("company@inc.com");
-        dto.setPrincipalTeacherId(principalId);
+
+        when(userRepository.findByEmail("user@email.com"))
+                .thenReturn(Optional.of(principal));
 
         when(userRepository.findById(principalId))
                 .thenReturn(Optional.of(principal));
+
+        when(companyRepository.existsByEmail(anyString())).thenReturn(false);
+        when(companyRepository.existsByCnpj(anyString())).thenReturn(false);
 
         when(companyRepository.save(any(Company.class)))
                 .thenReturn(company);
@@ -76,7 +98,6 @@ class CompanyServiceTest {
         assertNotNull(response);
         assertEquals("Sample School", response.getPublicName());
 
-        verify(userRepository).findById(principalId);
         verify(companyRepository).save(any(Company.class));
     }
 

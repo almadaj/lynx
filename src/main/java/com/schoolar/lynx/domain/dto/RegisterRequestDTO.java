@@ -4,6 +4,8 @@ import jakarta.validation.constraints.Email;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
+
 @Getter
 @Setter
 public class RegisterRequestDTO {
@@ -11,4 +13,5 @@ public class RegisterRequestDTO {
     @Email(message="Email inválido")
     private String email;
     private String password;
+    private LocalDate birth;
 }
