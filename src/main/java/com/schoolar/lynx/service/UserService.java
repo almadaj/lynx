@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Service
@@ -50,7 +51,7 @@ public class UserService {
 
         if (sessionUser.equals(dto)){
             user.setPassword(dto.getPassword());
-            user.setBirth(dto.getBirth().atStartOfDay());
+            user.setBirth(LocalDate.from(dto.getBirth().atStartOfDay()));
         }
         if (sessionUser.isAdmin()) {
             user.setAdmin(dto.isAdmin());

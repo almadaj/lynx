@@ -37,6 +37,9 @@ public class Assessment {
     @Column
     private LocalDate date;
 
+    @Column
+    private LocalDate limitDate;
+
     @ManyToOne
     @JoinColumn(name = "course_class_id", nullable = false)
     CourseClass courseClass;

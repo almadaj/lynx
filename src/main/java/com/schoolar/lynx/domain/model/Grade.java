@@ -35,6 +35,6 @@ public class Grade {
     @DecimalMin("0.0")
     private Double score;
 
-    @Column(length = 255)
+    @Column(length = 255, nullable = true)
     private String feedback;
 }
