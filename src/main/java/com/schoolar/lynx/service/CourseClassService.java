@@ -221,6 +221,7 @@ public class CourseClassService {
         User loggedUser = authenticatedUserService.get();
         List<CourseClass> classes;
 
+
         if (!loggedUser.isAdmin()) {
             classes = courseRepository
                     .findClassesByStudentId(loggedUser.getId());

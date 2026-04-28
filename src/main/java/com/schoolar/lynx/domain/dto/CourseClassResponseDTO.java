@@ -18,11 +18,12 @@ public class CourseClassResponseDTO {
     private LanguageLevel level;
     private Language language;
     private Integer maxStudents;
-    private UUID teacherId;
     private UUID companyId;
+    private UserResponseDTO teacher;
     private LocalDateTime startDate;
     private LocalDateTime endDate;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<StudentSummaryDTO> students;
+
 }
