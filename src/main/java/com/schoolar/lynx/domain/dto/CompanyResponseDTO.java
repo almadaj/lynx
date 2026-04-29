@@ -18,6 +18,6 @@ public class CompanyResponseDTO {
     private String address;
     private boolean hasOnlineClass;
     private boolean isActive;
-    private UUID principalTeacherId;
+    private UserResponseDTO principalTeacher; //TODO: ajustar para passar o objeto UserResponseDTO
     private List<CompanySocialNetworkResponseDTO> socialNetworks;
 }

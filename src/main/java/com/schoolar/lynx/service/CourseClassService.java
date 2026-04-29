@@ -22,7 +22,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -215,7 +214,6 @@ public class CourseClassService {
         courseRepository.deleteById(id);
     }
 
-    //TODO: criar um mapper para conseguir retornar id, nome, birth dos alunos
     public List<CourseClassResponseDTO> findMyCourseClasses() {
 
         User loggedUser = authenticatedUserService.get();

@@ -1,9 +1,7 @@
 package com.schoolar.lynx.service;
 
-import com.schoolar.lynx.domain.dto.CompanyResponseDTO;
-import com.schoolar.lynx.domain.dto.CompanySocialNetworkResponseDTO;
-import com.schoolar.lynx.domain.dto.RegisterCompanyDTO;
-import com.schoolar.lynx.domain.dto.UpdateCompanyDTO;
+import com.schoolar.lynx.domain.dto.*;
+import com.schoolar.lynx.domain.mapper.UserMapper;
 import com.schoolar.lynx.domain.model.Company;
 import com.schoolar.lynx.domain.model.User;
 import com.schoolar.lynx.repository.CompanyRepository;
@@ -97,7 +95,7 @@ public class CompanyService {
         dto.setActive(company.isActive());
 
         if (company.getPrincipalTeacher() != null) {
-            dto.setPrincipalTeacherId(company.getPrincipalTeacher().getId());
+            dto.setPrincipalTeacher(dto.getPrincipalTeacher());
         }
         return dto;
     }
@@ -117,6 +115,8 @@ public class CompanyService {
         }
 
         CompanyResponseDTO dto = new CompanyResponseDTO();
+        User principalTeacher = company.getPrincipalTeacher();
+
         dto.setId(company.getId());
         dto.setPublicName(company.getPublicName());
         dto.setCompanyName(company.getCompanyName());
@@ -128,7 +128,15 @@ public class CompanyService {
         dto.setActive(company.isActive());
 
         if (company.getPrincipalTeacher() != null) {
-            dto.setPrincipalTeacherId(company.getPrincipalTeacher().getId());
+            UserResponseDTO teacherDTO = new UserResponseDTO();
+            teacherDTO.setId(principalTeacher.getId());
+            teacherDTO.setName(principalTeacher.getName());
+            teacherDTO.setEmail(principalTeacher.getEmail());
+            teacherDTO.setBirth(principalTeacher.getBirth());
+            teacherDTO.setActive(principalTeacher.isActive());
+            teacherDTO.setAdmin(principalTeacher.isAdmin());
+
+            dto.setPrincipalTeacher(teacherDTO);
         }
 
         List<CompanySocialNetworkResponseDTO> socials =
