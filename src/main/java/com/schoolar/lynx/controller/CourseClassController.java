@@ -44,8 +44,8 @@ public class CourseClassController {
        return service.findMyCourseClasses();
     }
 
-    @GetMapping("/all")
-    public List<CourseClassResponseDTO> getAllCourses(){
-        return service.findAllCourseClasses();
+    @GetMapping("/company/{companyId}")
+    public List<CourseClassResponseDTO> getCoursesByCompanyId(@PathVariable UUID companyId){
+        return service.findCoursesByCompany(companyId);
     }
 }

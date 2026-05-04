@@ -3,6 +3,7 @@ package com.schoolar.lynx.service;
 import com.schoolar.lynx.domain.dto.*;
 import com.schoolar.lynx.domain.mapper.UserMapper;
 import com.schoolar.lynx.domain.model.Company;
+import com.schoolar.lynx.domain.model.CourseClass;
 import com.schoolar.lynx.domain.model.User;
 import com.schoolar.lynx.repository.CompanyRepository;
 import com.schoolar.lynx.repository.UserRepository;
@@ -18,7 +19,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +29,7 @@ public class CompanyService {
     private final CompanyRepository companyRepository;
     private final UserRepository userRepository;
     private final AuthenticatedUserService authUserService;
+    private final CourseClassService courseService;
 
     public CompanyResponseDTO create(RegisterCompanyDTO dto) {
         Authentication authentication = SecurityContextHolder
@@ -244,5 +248,32 @@ public class CompanyService {
 
         CompanyResponseDTO savedCompany = findActiveInactiveById(id);
         return savedCompany;
+    }
+
+    public List<UserResponseDTO> getTeachersBySchoolId(UUID id) {
+        Company company = companyRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Empresa não encontrada"
+                ));
+
+        if (!company.isActive()) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Empresa está inativa"
+            );
+        }
+        List<CourseClassResponseDTO> courses = courseService.findCoursesByCompany(id);
+        return courses.stream()
+                .map(CourseClassResponseDTO::getTeacher)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toMap(
+                        UserResponseDTO::getId,
+                        teacher -> teacher,
+                        (existing, duplicate) -> existing
+                ))
+                .values()
+                .stream()
+                .toList();
     }
 }

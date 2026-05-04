@@ -257,4 +257,22 @@ public class CourseClassService {
                 .map(CourseClassMapper::toDTO)
                 .toList();
     }
+
+    public List<CourseClassResponseDTO> findCoursesByCompany(UUID companyId){
+        User loggedUser = authenticatedUserService.get();
+
+        if (loggedUser == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED
+            );
+        }
+
+        List<CourseClass> classes;
+
+        classes = courseRepository.findByCompanyIdWithStudents(companyId);
+
+        return classes.stream()
+                .map(CourseClassMapper::toDTO)
+                .toList();
+    }
 }

@@ -3,6 +3,7 @@ package com.schoolar.lynx.controller;
 import com.schoolar.lynx.domain.dto.CompanyResponseDTO;
 import com.schoolar.lynx.domain.dto.RegisterCompanyDTO;
 import com.schoolar.lynx.domain.dto.UpdateCompanyDTO;
+import com.schoolar.lynx.domain.dto.UserResponseDTO;
 import com.schoolar.lynx.service.CompanyService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -37,5 +39,10 @@ public class CompanyController {
     @PutMapping("/{id}")
     public ResponseEntity<CompanyResponseDTO> updateCompanyById(@PathVariable UUID id, @Valid @RequestBody UpdateCompanyDTO dto){
         return ResponseEntity.ok(service.update(id, dto));
+    }
+
+    @GetMapping("/{id}/teachers")
+    public ResponseEntity<List<UserResponseDTO>> getAllTeachersByCompany(@PathVariable UUID id){
+        return ResponseEntity.ok(service.getTeachersBySchoolId(id));
     }
 }
