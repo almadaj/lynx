@@ -6,6 +6,8 @@ public enum Language {
     FRENCH,
     GERMAN,
     ITALIAN,
-    PORTUGUESE
+    PORTUGUESE,
+    DUTCH,
+    ARABIC
 }
 

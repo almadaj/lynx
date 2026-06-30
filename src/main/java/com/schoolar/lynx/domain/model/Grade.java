@@ -37,4 +37,6 @@ public class Grade {
 
     @Column(length = 255, nullable = true)
     private String feedback;
+
+    //TODO: ajustar isso para ser o attempt_assessment
 }
