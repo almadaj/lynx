@@ -1,9 +1,5 @@
 package com.schoolar.lynx.domain.dto;
 
-import com.schoolar.lynx.domain.model.CourseClass;
-import jakarta.persistence.Column;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;

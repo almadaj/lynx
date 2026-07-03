@@ -7,12 +7,22 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Entity
+@Getter
+@Setter
+@ToString
+@EqualsAndHashCode
+@NoArgsConstructor
+@AllArgsConstructor
+@Table(name = "question")
+@Builder
 public class Question {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -20,8 +30,8 @@ public class Question {
     private UUID id;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User student;
+    @JoinColumn(name = "author_id", nullable = false)
+    private User author;
 
     @ManyToOne
     @JoinColumn(name = "company_id", nullable = false)

@@ -1,9 +1,7 @@
 package com.schoolar.lynx.service;
 
 import com.schoolar.lynx.domain.dto.*;
-import com.schoolar.lynx.domain.mapper.UserMapper;
 import com.schoolar.lynx.domain.model.Company;
-import com.schoolar.lynx.domain.model.CourseClass;
 import com.schoolar.lynx.domain.model.User;
 import com.schoolar.lynx.repository.CompanyRepository;
 import com.schoolar.lynx.repository.UserRepository;
