@@ -14,7 +14,7 @@ public class RegisterQuestionDTO {
     private UUID authorId;
     private UUID companyId;
     private int privacy;
-    private QuestionType type;
+    private QuestionType questionType;
     private Difficulty difficulty;
     private String head;
     private String body;

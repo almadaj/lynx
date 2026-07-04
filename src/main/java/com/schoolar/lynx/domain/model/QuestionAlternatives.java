@@ -1,7 +1,6 @@
 package com.schoolar.lynx.domain.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
@@ -17,7 +16,6 @@ public class QuestionAlternatives {
     @JoinColumn(name = "question_id", nullable = false)
     private Question question;
 
-    @Lob
     @Column(columnDefinition = "TEXT")
     private String alternativeText;
 
@@ -27,5 +25,4 @@ public class QuestionAlternatives {
 
     @Column(name = "is_correct", nullable = false)
     private boolean isCorrect;
-
 }

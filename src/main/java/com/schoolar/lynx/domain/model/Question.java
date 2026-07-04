@@ -50,19 +50,15 @@ public class Question {
     @Column(nullable = false)
     private QuestionType questionType;
 
-    @Lob
     @Column(columnDefinition = "TEXT")
     private String header;
 
-    @Lob
     @Column(columnDefinition = "TEXT")
     private String body;
 
-    @Lob
     @Column(columnDefinition = "TEXT")
     private String footer;
 
-    @Lob
     @Column(columnDefinition = "TEXT")
     private String expectedAnswer;
 
