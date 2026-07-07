@@ -2,6 +2,7 @@ package com.schoolar.lynx.domain.mapper;
 
 import com.schoolar.lynx.domain.dto.QuestionResponseDTO;
 import com.schoolar.lynx.domain.dto.RegisterQuestionDTO;
+import com.schoolar.lynx.domain.dto.UpdateQuestionDTO;
 import com.schoolar.lynx.domain.model.Company;
 import com.schoolar.lynx.domain.model.Question;
 import com.schoolar.lynx.domain.model.User;
@@ -37,12 +38,46 @@ public class QuestionMapper {
         question.setAuthor(user);
         question.setPrivacy(dto.getPrivacy());
         question.setCompany(company);
-        question.setHeader(dto.getHead());
+        question.setHeader(dto.getHeader());
         question.setBody(dto.getBody());
-        question.setFooter(dto.getFoot());
-        question.setExpectedAnswer(dto.getExpectAnswer());
+        question.setFooter(dto.getFooter());
+        question.setExpectedAnswer(dto.getExpectedAnswer());
         question.setDifficulty(dto.getDifficulty());
         question.setLanguage(dto.getLanguage());
         return question;
+    }
+
+    public static void updateEntity(Question question, UpdateQuestionDTO dto) {
+        if (dto.getPrivacy() != null) {
+            question.setPrivacy(dto.getPrivacy());
+        }
+
+        if (dto.getDifficulty() != null) {
+            question.setDifficulty(dto.getDifficulty());
+        }
+
+        if (dto.getQuestionType() != null) {
+            question.setQuestionType(dto.getQuestionType());
+        }
+
+        if (dto.getHeader() != null) {
+            question.setHeader(dto.getHeader());
+        }
+
+        if (dto.getBody() != null) {
+            question.setBody(dto.getBody());
+        }
+
+        if (dto.getFooter() != null) {
+            question.setFooter(dto.getFooter());
+        }
+
+        if (dto.getExpectedAnswer() != null) {
+            question.setExpectedAnswer(dto.getExpectedAnswer());
+        }
+
+        if (dto.getLanguage() != null) {
+            question.setLanguage(dto.getLanguage());
+        }
     }
 }

@@ -6,19 +6,15 @@ import com.schoolar.lynx.domain.enums.QuestionType;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.UUID;
-
 @Getter
 @Setter
-public class RegisterQuestionDTO {
-    private UUID authorId;
-    private UUID companyId;
-    private int privacy;
-    private QuestionType questionType;
-    private Difficulty difficulty;
+public class UpdateQuestionDTO {
     private String header;
     private String body;
     private String footer;
+    private Integer privacy;
+    private Difficulty difficulty;
+    private QuestionType questionType;
     private String expectedAnswer;
     private Language language;
 }

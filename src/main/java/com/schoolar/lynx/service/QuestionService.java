@@ -3,6 +3,7 @@ package com.schoolar.lynx.service;
 import com.schoolar.lynx.domain.dto.CompanyResponseDTO;
 import com.schoolar.lynx.domain.dto.QuestionResponseDTO;
 import com.schoolar.lynx.domain.dto.RegisterQuestionDTO;
+import com.schoolar.lynx.domain.dto.UpdateQuestionDTO;
 import com.schoolar.lynx.domain.mapper.QuestionMapper;
 import com.schoolar.lynx.domain.model.Company;
 import com.schoolar.lynx.domain.model.Question;
@@ -16,7 +17,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -35,7 +38,7 @@ public class QuestionService {
         if (!loggedUser.isAdmin()){
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
-                    "Apenas o professor principal pode alterar esta empresa"
+                    "Apenas o professor pode alterar questão"
             );
         }
 
@@ -49,5 +52,46 @@ public class QuestionService {
         Question question = QuestionMapper.toEntity(dto, loggedUser, company);
         Question saved = questionRepository.save(question);
         return QuestionMapper.toResponseDTO(saved);
+    }
+
+    public QuestionResponseDTO update(UUID id, UpdateQuestionDTO dto){
+        User loggedUser = authUserService.get();
+
+        if (!loggedUser.isAdmin()) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Apenas o professor pode alterar questão"
+            );
+        }
+
+        Question question = questionRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Questão não encontrada"
+                ));
+
+        QuestionMapper.updateEntity(question, dto);
+        Question saved = questionRepository.save(question);
+        return QuestionMapper.toResponseDTO(saved);
+    }
+
+    public String delete (UUID id){
+        User loggedUser = authUserService.get();
+        if (!loggedUser.isAdmin()){
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Apenas o professor principal pode alterar esta empresa"
+            );
+        }
+
+        Question question = questionRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Questão não encontrada"
+                ));
+        question.setUpdatedAt(LocalDateTime.now());
+        question.setDeletedAt(LocalDateTime.now());
+        questionRepository.save(question);
+        return "Questão deletada com sucesso";
     }
 }
