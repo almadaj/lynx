@@ -7,9 +7,14 @@ import com.schoolar.lynx.service.QuestionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -22,6 +27,25 @@ public class QuestionController {
     @PostMapping
     public ResponseEntity<QuestionResponseDTO> create(@Valid @RequestBody RegisterQuestionDTO question){
         return ResponseEntity.ok(service.create(question));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<QuestionResponseDTO> findById(@PathVariable UUID id){
+        return ResponseEntity.ok(service.findById(id));
+    }
+
+    @GetMapping
+    public ResponseEntity<Page<QuestionResponseDTO>> findAll(
+            @PageableDefault(
+                    page = 0,
+                    size = 10,
+                    sort = "createdAt",
+                    direction = Sort.Direction.DESC
+            )
+            Pageable pageable
+    ) {
+        return ResponseEntity.ok(service.findAll(pageable));
+        //TODO: inserir o search para buscar por header e body
     }
 
     @PutMapping("/{id}")

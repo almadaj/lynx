@@ -1,6 +1,5 @@
 package com.schoolar.lynx.service;
 
-import com.schoolar.lynx.domain.dto.CompanyResponseDTO;
 import com.schoolar.lynx.domain.dto.QuestionResponseDTO;
 import com.schoolar.lynx.domain.dto.RegisterQuestionDTO;
 import com.schoolar.lynx.domain.dto.UpdateQuestionDTO;
@@ -11,14 +10,15 @@ import com.schoolar.lynx.domain.model.User;
 import com.schoolar.lynx.repository.CompanyRepository;
 import com.schoolar.lynx.repository.QuestionRepository;
 import com.schoolar.lynx.security.AuthenticatedUserService;
-import com.schoolar.lynx.utils.MapperUtil;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -93,5 +93,20 @@ public class QuestionService {
         question.setDeletedAt(LocalDateTime.now());
         questionRepository.save(question);
         return "Questão deletada com sucesso";
+    }
+
+    public Page<QuestionResponseDTO> findAll(Pageable pageable) {
+        return questionRepository.findAll(pageable)
+                .map(QuestionMapper::toResponseDTO);
+    }
+
+    public QuestionResponseDTO findById(UUID id){
+        User loggedUser = authUserService.get();
+        Question question = questionRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Questão não encontrada"
+                ));
+        return QuestionMapper.toResponseDTO(question);
     }
 }
