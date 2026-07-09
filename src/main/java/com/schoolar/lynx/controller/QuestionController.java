@@ -36,6 +36,7 @@ public class QuestionController {
 
     @GetMapping
     public ResponseEntity<Page<QuestionResponseDTO>> findAll(
+            String search,
             @PageableDefault(
                     page = 0,
                     size = 10,
@@ -44,7 +45,7 @@ public class QuestionController {
             )
             Pageable pageable
     ) {
-        return ResponseEntity.ok(service.findAll(pageable));
+        return ResponseEntity.ok(service.findAll(search, pageable));
         //TODO: inserir o search para buscar por header e body
     }
 

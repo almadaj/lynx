@@ -95,8 +95,8 @@ public class QuestionService {
         return "Questão deletada com sucesso";
     }
 
-    public Page<QuestionResponseDTO> findAll(Pageable pageable) {
-        return questionRepository.findAll(pageable)
+    public Page<QuestionResponseDTO> findAll(String search, Pageable pageable) {
+        return questionRepository.findAllActive(search, pageable)
                 .map(QuestionMapper::toResponseDTO);
     }
 

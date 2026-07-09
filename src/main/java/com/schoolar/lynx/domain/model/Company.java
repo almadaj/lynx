@@ -50,6 +50,7 @@ public class Company {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "principal_teacher_id")
     private User principalTeacher;
+    //TODO: ideal seria ajustar para N e ajustar permissões para N
 
     @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CompanySocialNetwork> socialNetworks;
