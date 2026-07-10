@@ -46,7 +46,6 @@ public class QuestionController {
             Pageable pageable
     ) {
         return ResponseEntity.ok(service.findAll(search, pageable));
-        //TODO: inserir o search para buscar por header e body
     }
 
     @PutMapping("/{id}")
