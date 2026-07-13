@@ -5,12 +5,17 @@ import com.schoolar.lynx.domain.dto.UserResponseDTO;
 import com.schoolar.lynx.domain.model.User;
 import com.schoolar.lynx.repository.UserRepository;
 import com.schoolar.lynx.security.AuthenticatedUserService;
+import com.schoolar.lynx.storage.RailwayStorageService;
+import com.schoolar.lynx.storage.StorageService;
 import com.schoolar.lynx.utils.MapperUtil;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -18,6 +23,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository repository;
+    private final RailwayStorageService storageService;
     private final AuthenticatedUserService authenticatedUserService;
 
     public UserResponseDTO findById(UUID id) {
@@ -33,7 +39,13 @@ public class UserService {
                     "Usuário não existe mais"
             );
         }
-        return MapperUtil.parseObject(user, UserResponseDTO.class);
+
+        UserResponseDTO dto = MapperUtil.parseObject(user, UserResponseDTO.class);
+
+        dto.setProfilePhoto(
+                storageService.getUrl(user.getProfilePhoto())
+        );
+        return dto;
     }
 
     public UserResponseDTO update(UserDTO dto, UserDTO sessionUser) {
@@ -47,6 +59,7 @@ public class UserService {
         }
         user.setName(dto.getName());
         user.setEmail(dto.getEmail());
+        user.setProfilePhoto(dto.getProfilePhoto());
         user.setActive(dto.isActive());
 
         if (sessionUser.equals(dto)){
@@ -65,6 +78,44 @@ public class UserService {
         var user = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
         user.setActive(false);
+        repository.save(user);
+    }
+
+    @Transactional
+    public void uploadProfilePhoto(UUID id, MultipartFile file) throws IOException {
+        var user = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+        User loggedUser = authenticatedUserService.get();
+
+        if (loggedUser.getId() != user.getId()){
+            throw new RuntimeException("Somente é alterar foto a própria foto de usuário");
+        }
+
+        if (user.getProfilePhoto() != null) {
+            storageService.delete(user.getProfilePhoto());
+        }
+
+        String key = storageService.upload(file, "users/" + user.getId());
+        user.setProfilePhoto(key);
+        repository.save(user);
+    }
+
+    @Transactional
+    public void deleteProfilePhoto(UUID userId){
+        User user = repository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+        User loggedUser = authenticatedUserService.get();
+
+        if (loggedUser.getId() != user.getId()){
+            throw new RuntimeException("Somente é alterar foto a própria foto de usuário");
+        }
+
+        if (user.getProfilePhoto() == null) {
+            return;
+        }
+
+        storageService.delete(user.getProfilePhoto());
+        user.setProfilePhoto(null);
         repository.save(user);
     }
 

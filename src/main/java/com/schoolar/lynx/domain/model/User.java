@@ -36,6 +36,9 @@ public class User {
     @Column
     private LocalDate birth;
 
+    @Column(name = "profile_photo")
+    private String profilePhoto;
+
     @Column(name = "is_admin", nullable = false)
     private boolean isAdmin;
 

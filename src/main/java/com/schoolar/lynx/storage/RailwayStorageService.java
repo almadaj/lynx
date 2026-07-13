@@ -7,7 +7,10 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+
 import java.io.IOException;
 import java.util.UUID;
 
@@ -15,9 +18,13 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class RailwayStorageService implements StorageService {
     private final S3Client s3Client;
+    private final S3Presigner s3Presigner; //TODO: ver a questão do retorno de getUrl
 
     @Value("${storage.bucket}")
     private String bucket;
+
+    @Value("${storage.endpoint}")
+    private String endpoint;
 
     @Override
     public String upload(MultipartFile file, String folder) throws IOException {
@@ -44,7 +51,12 @@ public class RailwayStorageService implements StorageService {
 
     @Override
     public void delete(String key) {
+        DeleteObjectRequest request = DeleteObjectRequest.builder()
+                .bucket(bucket)
+                .key(key)
+                .build();
 
+        s3Client.deleteObject(request);
     }
 
     @Override
@@ -54,6 +66,10 @@ public class RailwayStorageService implements StorageService {
 
     @Override
     public String getUrl(String key) {
-        return "";
+        if (key == null || key.isBlank()) {
+            return null;
+        }
+
+        return endpoint + "/" + bucket + "/" + key;
     }
 }

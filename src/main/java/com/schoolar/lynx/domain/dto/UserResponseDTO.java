@@ -17,6 +17,7 @@ public class UserResponseDTO {
     private String name;
     private String email;
     private LocalDate birth;
+    private String profilePhoto;
     private boolean isActive;
     private boolean isAdmin;
 }

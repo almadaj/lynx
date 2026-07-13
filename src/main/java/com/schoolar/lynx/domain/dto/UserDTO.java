@@ -14,6 +14,7 @@ public class UserDTO {
     private String email;
     private String password;
     private LocalDate birth;
+    private String profilePhoto;
     private boolean isActive;
     private boolean isAdmin;
 }
