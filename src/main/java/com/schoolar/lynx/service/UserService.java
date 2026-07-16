@@ -2,6 +2,7 @@ package com.schoolar.lynx.service;
 
 import com.schoolar.lynx.domain.dto.UserDTO;
 import com.schoolar.lynx.domain.dto.UserResponseDTO;
+import com.schoolar.lynx.domain.enums.Role;
 import com.schoolar.lynx.domain.model.User;
 import com.schoolar.lynx.repository.UserRepository;
 import com.schoolar.lynx.security.AuthenticatedUserService;
@@ -11,6 +12,7 @@ import com.schoolar.lynx.utils.MapperUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
@@ -53,6 +55,7 @@ public class UserService {
         var session = repository.findById(sessionUser.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário de sessão não encontrado"));
 
+        //TODO: remover esse bloco
         if (!sessionUser.isAdmin() && Boolean.TRUE.equals(dto.isAdmin())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Você não tem permissão para promover usuário a admin.");
         }
@@ -87,7 +90,7 @@ public class UserService {
         User loggedUser = authenticatedUserService.get();
 
         if (loggedUser.getId() != user.getId()){
-            throw new RuntimeException("Somente é alterar foto a própria foto de usuário");
+            throw new RuntimeException("É possível alterar somente a própria foto de usuário");
         }
 
         if (user.getProfilePhoto() != null) {
@@ -97,6 +100,21 @@ public class UserService {
         String key = storageService.upload(file, "users/" + user.getId());
         user.setProfilePhoto(key);
         repository.save(user);
+    }
+
+    @Transactional
+    public UserResponseDTO promoteToNewRole(UUID id, Role role){
+        User user = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+        User loggedUser = authenticatedUserService.get();
+
+        if (loggedUser.getRole().equals(Role.ADMIN) || loggedUser.getRole().equals(Role.HEADTEACHER)) {
+            user.setRole(role);
+            repository.save(user);
+
+            return MapperUtil.parseObject(user, UserResponseDTO.class);
+        }
+        throw new RuntimeException("Somente administradores podem promover usuários");
     }
 
     @Transactional

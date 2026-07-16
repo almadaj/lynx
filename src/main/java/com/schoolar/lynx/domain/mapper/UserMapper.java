@@ -19,6 +19,7 @@ public class UserMapper {
         dto.setProfilePhoto(user.getProfilePhoto());
         dto.setActive(user.isActive());
         dto.setAdmin(user.isAdmin());
+        dto.setRole(user.getRole());
 
         return dto;
     }

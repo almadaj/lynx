@@ -2,6 +2,7 @@ package com.schoolar.lynx.controller;
 
 import com.schoolar.lynx.domain.dto.UserDTO;
 import com.schoolar.lynx.domain.dto.UserResponseDTO;
+import com.schoolar.lynx.domain.enums.Role;
 import com.schoolar.lynx.service.UserService;
 import com.schoolar.lynx.storage.StorageService;
 import lombok.RequiredArgsConstructor;
@@ -51,6 +52,16 @@ public class UserController {
     ) throws IOException {
         service.uploadProfilePhoto(id, file);
         return ResponseEntity.noContent().build();
+    }
+
+    //TODO: testar
+    @PostMapping("/{id}/promote")
+    public ResponseEntity<UserResponseDTO> promoteUserToNewRole(
+            @PathVariable UUID id,
+            @RequestBody Role role
+    ) {
+        UserResponseDTO updatedUser = service.promoteToNewRole(id, role);
+        return ResponseEntity.ok(updatedUser);
     }
 
     @DeleteMapping("/{id}/photo")

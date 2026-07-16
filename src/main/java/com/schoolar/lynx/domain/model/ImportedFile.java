@@ -1,7 +1,6 @@
 package com.schoolar.lynx.domain.model;
 
 import com.schoolar.lynx.domain.enums.ImportStatus;
-import com.schoolar.lynx.domain.enums.Language;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
