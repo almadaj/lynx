@@ -1,8 +1,13 @@
 package com.schoolar.lynx.domain.model;
 
+import com.schoolar.lynx.domain.enums.ImportStatus;
+import com.schoolar.lynx.domain.enums.Language;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -19,5 +24,17 @@ public class ImportedFile {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    private String filename;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ImportStatus status;
+
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(nullable = false)
+    private LocalDateTime finishedAt;
 }

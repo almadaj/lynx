@@ -41,7 +41,6 @@ public class UserService {
         }
 
         UserResponseDTO dto = MapperUtil.parseObject(user, UserResponseDTO.class);
-
         dto.setProfilePhoto(
                 storageService.getUrl(user.getProfilePhoto())
         );
@@ -123,6 +122,8 @@ public class UserService {
         User loggedUser = authenticatedUserService.get();
         User user = repository.findById(loggedUser.getId())
                 .orElseThrow(()-> new RuntimeException("Usuário não encontrado"));
+
+        user.setProfilePhoto(storageService.getUrl(String.valueOf(user.getProfilePhoto())));
         return MapperUtil.parseObject(user, UserResponseDTO.class);
     }
 }
