@@ -16,14 +16,16 @@ import java.io.IOException;
 public class StorageController {
 
     private final StorageService storageService;
+//    Classe removida, foi utilizada somente para teste
+//    e primeira implementação do upload ao bucket
 
-    @PostMapping("/upload")
-    public ResponseEntity<String> upload(
-            @RequestParam MultipartFile file
-    ) throws IOException {
-
-        String key = storageService.upload(file, "users");
-
-        return ResponseEntity.ok(key);
-    }
+//    @PostMapping("/upload")
+//    public ResponseEntity<String> upload(
+//            @RequestParam MultipartFile file
+//    ) throws IOException {
+//
+//        String key = storageService.upload(file, "users");
+//
+//        return ResponseEntity.ok(key);
+//    }
 }
