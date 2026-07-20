@@ -11,6 +11,7 @@ import com.schoolar.lynx.storage.StorageService;
 import com.schoolar.lynx.utils.MapperUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -100,6 +102,12 @@ public class UserService {
         String key = storageService.upload(file, "users/" + user.getId());
         user.setProfilePhoto(key);
         repository.save(user);
+
+        log.info(
+                "Foto de perfil adicionada. userId={}, key={}",
+                id,
+                user.getProfilePhoto()
+        );
     }
 
     @Transactional
@@ -131,9 +139,16 @@ public class UserService {
             return;
         }
 
+        log.info(
+                "Foto de perfil removida. userId={}, key={}",
+                userId,
+                user.getProfilePhoto()
+        );
+
         storageService.delete(user.getProfilePhoto());
         user.setProfilePhoto(null);
         repository.save(user);
+
     }
 
     public UserResponseDTO getOwnInfo(){
