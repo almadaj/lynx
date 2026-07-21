@@ -1,11 +1,11 @@
 package com.schoolar.lynx.domain.model;
 
+import com.schoolar.lynx.domain.enums.Role;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import lombok.*;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -36,8 +36,15 @@ public class User {
     @Column
     private LocalDate birth;
 
+    @Column(name = "profile_photo")
+    private String profilePhoto;
+
     @Column(name = "is_admin", nullable = false)
     private boolean isAdmin;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role = Role.STUDENT;
 
     @Column(name = "is_active", nullable = false)
     private boolean isActive;

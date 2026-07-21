@@ -2,12 +2,17 @@ package com.schoolar.lynx.controller;
 
 import com.schoolar.lynx.domain.dto.UserDTO;
 import com.schoolar.lynx.domain.dto.UserResponseDTO;
+import com.schoolar.lynx.domain.enums.Role;
 import com.schoolar.lynx.service.UserService;
+import com.schoolar.lynx.storage.StorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.UUID;
 
 @RestController
@@ -16,6 +21,9 @@ import java.util.UUID;
 public class UserController {
     @Autowired
     private final UserService service;
+
+    @Autowired
+    private final StorageService storageService;
 
     @PutMapping
     public UserResponseDTO updateUser (@RequestBody UserDTO user, @RequestBody UserDTO sessionUser){
@@ -35,5 +43,32 @@ public class UserController {
     @GetMapping("/me")
     public ResponseEntity<UserResponseDTO> findMyInfo(){
         return ResponseEntity.ok(service.getOwnInfo());
+    }
+
+    @PostMapping("/{id}/photo")
+    public ResponseEntity<Void> uploadProfilePhoto(
+            @PathVariable UUID id,
+            @RequestParam("file") MultipartFile file
+    ) throws IOException {
+        service.uploadProfilePhoto(id, file);
+        return ResponseEntity.noContent().build();
+    }
+
+    //TODO: testar
+    @PostMapping("/{id}/promote")
+    public ResponseEntity<UserResponseDTO> promoteUserToNewRole(
+            @PathVariable UUID id,
+            @RequestBody Role role
+    ) {
+        UserResponseDTO updatedUser = service.promoteToNewRole(id, role);
+        return ResponseEntity.ok(updatedUser);
+    }
+
+    @DeleteMapping("/{id}/photo")
+    public ResponseEntity<Void> deleteProfilePhoto(
+            @PathVariable UUID id
+    ) throws IOException {
+        service.deleteProfilePhoto(id);
+        return ResponseEntity.noContent().build();
     }
 }

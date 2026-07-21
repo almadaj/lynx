@@ -2,22 +2,32 @@ package com.schoolar.lynx.service;
 
 import com.schoolar.lynx.domain.dto.UserDTO;
 import com.schoolar.lynx.domain.dto.UserResponseDTO;
+import com.schoolar.lynx.domain.enums.Role;
 import com.schoolar.lynx.domain.model.User;
 import com.schoolar.lynx.repository.UserRepository;
 import com.schoolar.lynx.security.AuthenticatedUserService;
+import com.schoolar.lynx.storage.RailwayStorageService;
+import com.schoolar.lynx.storage.StorageService;
 import com.schoolar.lynx.utils.MapperUtil;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository repository;
+    private final RailwayStorageService storageService;
     private final AuthenticatedUserService authenticatedUserService;
 
     public UserResponseDTO findById(UUID id) {
@@ -33,7 +43,12 @@ public class UserService {
                     "Usuário não existe mais"
             );
         }
-        return MapperUtil.parseObject(user, UserResponseDTO.class);
+
+        UserResponseDTO dto = MapperUtil.parseObject(user, UserResponseDTO.class);
+        dto.setProfilePhoto(
+                storageService.getUrl(user.getProfilePhoto())
+        );
+        return dto;
     }
 
     public UserResponseDTO update(UserDTO dto, UserDTO sessionUser) {
@@ -42,11 +57,13 @@ public class UserService {
         var session = repository.findById(sessionUser.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário de sessão não encontrado"));
 
+        //TODO: remover esse bloco
         if (!sessionUser.isAdmin() && Boolean.TRUE.equals(dto.isAdmin())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Você não tem permissão para promover usuário a admin.");
         }
         user.setName(dto.getName());
         user.setEmail(dto.getEmail());
+        user.setProfilePhoto(dto.getProfilePhoto());
         user.setActive(dto.isActive());
 
         if (sessionUser.equals(dto)){
@@ -68,10 +85,78 @@ public class UserService {
         repository.save(user);
     }
 
+    @Transactional
+    public void uploadProfilePhoto(UUID id, MultipartFile file) throws IOException {
+        var user = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+        User loggedUser = authenticatedUserService.get();
+
+        if (loggedUser.getId() != user.getId()){
+            throw new RuntimeException("É possível alterar somente a própria foto de usuário");
+        }
+
+        if (user.getProfilePhoto() != null) {
+            storageService.delete(user.getProfilePhoto());
+        }
+
+        String key = storageService.upload(file, "users/" + user.getId());
+        user.setProfilePhoto(key);
+        repository.save(user);
+
+        log.info(
+                "Foto de perfil adicionada. userId={}, key={}",
+                id,
+                user.getProfilePhoto()
+        );
+    }
+
+    @Transactional
+    public UserResponseDTO promoteToNewRole(UUID id, Role role){
+        User user = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+        User loggedUser = authenticatedUserService.get();
+
+        if (loggedUser.getRole().equals(Role.ADMIN) || loggedUser.getRole().equals(Role.HEADTEACHER)) {
+            user.setRole(role);
+            repository.save(user);
+
+            return MapperUtil.parseObject(user, UserResponseDTO.class);
+        }
+        throw new RuntimeException("Somente administradores podem promover usuários");
+    }
+
+    @Transactional
+    public void deleteProfilePhoto(UUID userId){
+        User user = repository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+        User loggedUser = authenticatedUserService.get();
+
+        if (loggedUser.getId() != user.getId()){
+            throw new RuntimeException("Somente é alterar foto a própria foto de usuário");
+        }
+
+        if (user.getProfilePhoto() == null) {
+            return;
+        }
+
+        log.info(
+                "Foto de perfil removida. userId={}, key={}",
+                userId,
+                user.getProfilePhoto()
+        );
+
+        storageService.delete(user.getProfilePhoto());
+        user.setProfilePhoto(null);
+        repository.save(user);
+
+    }
+
     public UserResponseDTO getOwnInfo(){
         User loggedUser = authenticatedUserService.get();
         User user = repository.findById(loggedUser.getId())
                 .orElseThrow(()-> new RuntimeException("Usuário não encontrado"));
+
+        user.setProfilePhoto(storageService.getUrl(String.valueOf(user.getProfilePhoto())));
         return MapperUtil.parseObject(user, UserResponseDTO.class);
     }
 }

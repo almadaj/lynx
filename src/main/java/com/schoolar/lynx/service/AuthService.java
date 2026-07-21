@@ -5,10 +5,10 @@ import com.schoolar.lynx.domain.dto.LoginResponseDTO;
 import com.schoolar.lynx.domain.dto.RegisterRequestDTO;
 import com.schoolar.lynx.domain.model.User;
 import com.schoolar.lynx.repository.UserRepository;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import static com.schoolar.lynx.domain.enums.Role.STUDENT;
 
 @Service
 @RequiredArgsConstructor
@@ -41,6 +41,7 @@ public class AuthService {
                 .password(passwordEncoder.encode(dto.getPassword()))
                 .isAdmin(false)
                 .isActive(true)
+                .role(STUDENT)
                 .build();
 
         userRepository.save(user);

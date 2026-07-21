@@ -16,8 +16,10 @@ public class UserMapper {
         dto.setName(user.getName());
         dto.setEmail(user.getEmail());
         dto.setBirth(user.getBirth());
+        dto.setProfilePhoto(user.getProfilePhoto());
         dto.setActive(user.isActive());
         dto.setAdmin(user.isAdmin());
+        dto.setRole(user.getRole());
 
         return dto;
     }
