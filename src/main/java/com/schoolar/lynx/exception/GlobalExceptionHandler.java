@@ -2,8 +2,10 @@ package com.schoolar.lynx.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -32,6 +34,17 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(ex.getStatusCode())
+                .body(error);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<Map<String, String>> handleMaxUploadSizeExceeded(
+            MaxUploadSizeExceededException ex) {
+
+        Map<String, String> error = new HashMap<>();
+        error.put("error", "O arquivo excede o tamanho máximo permitido.");
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(error);
     }
 

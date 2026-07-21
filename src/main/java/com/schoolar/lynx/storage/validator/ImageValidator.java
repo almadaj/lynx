@@ -68,7 +68,7 @@ public class ImageValidator extends FileValidator {
     protected void validateSize(MultipartFile file) {
         if (file.getSize() > MAX_FILE_SIZE_IMAGE) {
             throw new IllegalArgumentException(
-                    "O arquivo deve possuir no máximo 5 MB."
+                    "O arquivo deve possuir no máximo 1 MB."
             );
         }
     }
