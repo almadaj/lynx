@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -19,5 +20,6 @@ public class UserResponseDTO {
     private LocalDate birth;
     private String profilePhoto;
     private boolean isActive;
+    private List<UserCompanyResponse> companies;
     private boolean isAdmin;
 }
