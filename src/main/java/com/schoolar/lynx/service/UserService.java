@@ -2,7 +2,6 @@ package com.schoolar.lynx.service;
 
 import com.schoolar.lynx.domain.dto.UserDTO;
 import com.schoolar.lynx.domain.dto.UserResponseDTO;
-import com.schoolar.lynx.domain.enums.Role;
 import com.schoolar.lynx.domain.model.User;
 import com.schoolar.lynx.repository.UserRepository;
 import com.schoolar.lynx.security.AuthenticatedUserService;
@@ -110,20 +109,20 @@ public class UserService {
         );
     }
 
-    @Transactional
-    public UserResponseDTO promoteToNewRole(UUID id, Role role){
-        User user = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
-        User loggedUser = authenticatedUserService.get();
-
-        if (loggedUser.getRole().equals(Role.ADMIN) || loggedUser.getRole().equals(Role.HEADTEACHER)) {
-            user.setRole(role);
-            repository.save(user);
-
-            return MapperUtil.parseObject(user, UserResponseDTO.class);
-        }
-        throw new RuntimeException("Somente administradores podem promover usuários");
-    }
+//    @Transactional
+//    public UserResponseDTO promoteToNewRole(UUID id, Role role){
+//        User user = repository.findById(id)
+//                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+//        User loggedUser = authenticatedUserService.get();
+//
+//        if (loggedUser.getRole().equals(Role.ADMIN) || loggedUser.getRole().equals(Role.HEADTEACHER)) {
+//            user.setRole(role);
+//            repository.save(user);
+//
+//            return MapperUtil.parseObject(user, UserResponseDTO.class);
+//        }
+//        throw new RuntimeException("Somente administradores podem promover usuários");
+//    }
 
     @Transactional
     public void deleteProfilePhoto(UUID userId){

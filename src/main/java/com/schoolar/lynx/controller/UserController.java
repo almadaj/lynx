@@ -2,7 +2,6 @@ package com.schoolar.lynx.controller;
 
 import com.schoolar.lynx.domain.dto.UserDTO;
 import com.schoolar.lynx.domain.dto.UserResponseDTO;
-import com.schoolar.lynx.domain.enums.Role;
 import com.schoolar.lynx.service.UserService;
 import com.schoolar.lynx.storage.StorageService;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.util.UUID;
 
 @RestController
@@ -55,14 +53,14 @@ public class UserController {
     }
 
     //TODO: testar
-    @PostMapping("/{id}/promote")
-    public ResponseEntity<UserResponseDTO> promoteUserToNewRole(
-            @PathVariable UUID id,
-            @RequestBody Role role
-    ) {
-        UserResponseDTO updatedUser = service.promoteToNewRole(id, role);
-        return ResponseEntity.ok(updatedUser);
-    }
+//    @PostMapping("/{id}/promote")
+//    public ResponseEntity<UserResponseDTO> promoteUserToNewRole(
+//            @PathVariable UUID id,
+//            @RequestBody Role role
+//    ) {
+//        UserResponseDTO updatedUser = service.promoteToNewRole(id, role);
+//        return ResponseEntity.ok(updatedUser);
+//    }
 
     @DeleteMapping("/{id}/photo")
     public ResponseEntity<Void> deleteProfilePhoto(

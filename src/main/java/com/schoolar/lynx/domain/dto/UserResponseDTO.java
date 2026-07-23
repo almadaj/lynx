@@ -1,6 +1,5 @@
 package com.schoolar.lynx.domain.dto;
 
-import com.schoolar.lynx.domain.enums.Role;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -19,7 +18,6 @@ public class UserResponseDTO {
     private String email;
     private LocalDate birth;
     private String profilePhoto;
-    private Role role;
     private boolean isActive;
     private boolean isAdmin;
 }

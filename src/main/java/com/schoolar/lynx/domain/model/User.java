@@ -1,6 +1,5 @@
 package com.schoolar.lynx.domain.model;
 
-import com.schoolar.lynx.domain.enums.Role;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import lombok.*;
@@ -41,10 +40,6 @@ public class User {
 
     @Column(name = "is_admin", nullable = false)
     private boolean isAdmin;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Role role = Role.STUDENT;
 
     @Column(name = "is_active", nullable = false)
     private boolean isActive;
