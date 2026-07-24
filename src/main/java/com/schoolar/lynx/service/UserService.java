@@ -162,6 +162,6 @@ public class UserService {
 
         UserResponseDTO dto = UserMapper.toResponseDTO(user);
         dto.setCompanies(companies);
-        return MapperUtil.parseObject(user, UserResponseDTO.class);
+        return dto;
     }
 }

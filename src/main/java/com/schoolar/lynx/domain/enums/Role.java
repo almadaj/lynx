@@ -5,7 +5,8 @@ public enum Role {
     STUDENT(1),
     TEACHER(2),
     HEADTEACHER(3),
-    ADMIN(4);
+    PRINCIPAL(4),
+    ADMIN(5);
 
     private final int level;
 

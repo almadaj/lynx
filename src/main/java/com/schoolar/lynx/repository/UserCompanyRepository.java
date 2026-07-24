@@ -10,4 +10,5 @@ import java.util.UUID;
 public interface UserCompanyRepository extends JpaRepository<UserCompany, UUID> {
     List<UserCompany> findAllByUserId(UUID userId);
     Optional<UserCompany> findByUserIdAndCompanyId(UUID userId, UUID companyId);
+    boolean existsByCompanyIdAndUserId(UUID companyId, UUID userId);
 }

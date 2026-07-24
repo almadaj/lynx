@@ -1,10 +1,9 @@
 package com.schoolar.lynx.controller;
 
-import com.schoolar.lynx.domain.dto.CompanyResponseDTO;
-import com.schoolar.lynx.domain.dto.RegisterCompanyDTO;
-import com.schoolar.lynx.domain.dto.UpdateCompanyDTO;
-import com.schoolar.lynx.domain.dto.UserResponseDTO;
+import com.schoolar.lynx.domain.dto.*;
+import com.schoolar.lynx.domain.enums.Role;
 import com.schoolar.lynx.service.CompanyService;
+import com.schoolar.lynx.service.UserCompanyService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +19,7 @@ import java.util.UUID;
 public class CompanyController {
     @Autowired
     private final CompanyService service;
+    private final UserCompanyService userCompanyService;
 
     @PostMapping
     public ResponseEntity<CompanyResponseDTO> createCompany(@Valid @RequestBody RegisterCompanyDTO dto){
@@ -44,5 +44,10 @@ public class CompanyController {
     @GetMapping("/{id}/teachers")
     public ResponseEntity<List<UserResponseDTO>> getAllTeachersByCompany(@PathVariable UUID id){
         return ResponseEntity.ok(service.getTeachersBySchoolId(id));
+    }
+
+    @PostMapping("/{id}/members")
+    public ResponseEntity<UserCompanyResponse> addTeacherToCompany(@PathVariable UUID id, @RequestBody AddNewMemberDTO dto){
+        return ResponseEntity.ok(userCompanyService.addTeacherToCompany(id, dto.getUserId(), dto.getRole()));
     }
 }
