@@ -1,5 +1,6 @@
 package com.schoolar.lynx.service;
 
+import com.schoolar.lynx.domain.dto.AddNewMemberDTO;
 import com.schoolar.lynx.domain.dto.UserCompanyResponse;
 import com.schoolar.lynx.domain.dto.UserResponseDTO;
 import com.schoolar.lynx.domain.enums.Role;
@@ -45,7 +46,7 @@ public class UserCompanyService {
     }
 
     @Transactional
-    public UserCompanyResponse addTeacherToCompany(UUID companyId, UUID newMemberId, Role role) {
+    public UserCompanyResponse addTeacherToCompany(UUID companyId, AddNewMemberDTO dto) {
         authorizationService.require(Role.HEADTEACHER, companyId);
 
         Company company = companyRepository.findById(companyId)
@@ -53,24 +54,25 @@ public class UserCompanyService {
                         HttpStatus.NOT_FOUND,
                         "Empresa não encontrada"
                 ));
-        User user = userRepository.findById(newMemberId)
+        User user = userRepository.findByEmail(dto.getEmail())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Usuário não encontrado"
                 ));
 
-        if (role == Role.TEACHER || role == Role.HEADTEACHER){
+
+        if (dto.getRole() == Role.TEACHER || dto.getRole() == Role.HEADTEACHER){
             throw new IllegalArgumentException("Papel administrativo inválido.");
         }
 
-        if (userCompanyRepository.existsByCompanyIdAndUserId(companyId, newMemberId)) {
+        if (userCompanyRepository.existsByCompanyIdAndUserId(companyId, user.getId())) {
             throw new IllegalArgumentException("Usuário já pertence a esta empresa.");
         }
 
         UserCompany userCompany = new UserCompany();
         userCompany.setCompany(company);
         userCompany.setUser(user);
-        userCompany.setRole(role);
+        userCompany.setRole(dto.getRole());
 
         UserCompany saved = userCompanyRepository.save(userCompany);
 

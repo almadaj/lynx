@@ -9,6 +9,6 @@ import java.util.UUID;
 @Getter
 @Setter
 public class AddNewMemberDTO {
-    private UUID userId;
+    private String email;
     private Role role;
 }

@@ -52,6 +52,27 @@ public class UserService {
         return dto;
     }
 
+    public UserResponseDTO findByEmail(String email) {
+        User user = repository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Usuário não encontrado"
+                ));
+
+        if (!user.isActive()) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Usuário não encontrado"
+            );
+        }
+
+        UserResponseDTO dto = MapperUtil.parseObject(user, UserResponseDTO.class);
+        dto.setProfilePhoto(
+                storageService.getUrl(user.getProfilePhoto())
+        );
+        return dto;
+    }
+
     public UserResponseDTO update(UserDTO dto, UserDTO sessionUser) {
         var user = repository.findById(dto.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
