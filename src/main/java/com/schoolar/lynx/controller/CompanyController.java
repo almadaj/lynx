@@ -48,6 +48,6 @@ public class CompanyController {
 
     @PostMapping("/{id}/members")
     public ResponseEntity<UserCompanyResponse> addTeacherToCompany(@PathVariable UUID id, @RequestBody AddNewMemberDTO dto){
-        return ResponseEntity.ok(userCompanyService.addTeacherToCompany(id, dto.getEmail(), dto.getRole()));
+        return ResponseEntity.ok(userCompanyService.addTeacherToCompany(id, dto));
     }
 }
