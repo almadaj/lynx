@@ -38,6 +38,11 @@ public class UserController {
         return ResponseEntity.ok(service.findById(id));
     }
 
+    @GetMapping("/email={email}")
+    public ResponseEntity<UserResponseDTO> findUserByEmail(@PathVariable String email) {
+        return ResponseEntity.ok(service.findByEmail(email));
+    }
+
     @GetMapping("/me")
     public ResponseEntity<UserResponseDTO> findMyInfo(){
         return ResponseEntity.ok(service.getOwnInfo());
