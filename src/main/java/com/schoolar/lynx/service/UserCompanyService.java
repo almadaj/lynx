@@ -61,12 +61,12 @@ public class UserCompanyService {
                 ));
 
 
-        if (dto.getRole() == Role.TEACHER || dto.getRole() == Role.HEADTEACHER){
+        if (dto.getRole() == Role.ADMIN || dto.getRole() == Role.PRINCIPAL ) {
             throw new IllegalArgumentException("Papel administrativo inválido.");
         }
 
         if (userCompanyRepository.existsByCompanyIdAndUserId(companyId, user.getId())) {
-            throw new IllegalArgumentException("Usuário já pertence a esta empresa.");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Usuário já pertence a esta empresa.");
         }
 
         UserCompany userCompany = new UserCompany();
