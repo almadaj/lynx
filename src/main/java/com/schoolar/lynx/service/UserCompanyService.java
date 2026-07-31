@@ -4,6 +4,7 @@ import com.schoolar.lynx.domain.dto.AddNewMemberDTO;
 import com.schoolar.lynx.domain.dto.UserCompanyResponse;
 import com.schoolar.lynx.domain.dto.UserResponseDTO;
 import com.schoolar.lynx.domain.enums.Role;
+import com.schoolar.lynx.domain.mapper.UserCompanyMapper;
 import com.schoolar.lynx.domain.model.Company;
 import com.schoolar.lynx.domain.model.User;
 import com.schoolar.lynx.domain.model.UserCompany;
@@ -30,6 +31,7 @@ public class UserCompanyService {
     private final CompanyRepository companyRepository;
     private final UserCompanyRepository userCompanyRepository;
     private final CompanyAuthorizationService authorizationService;
+    private final UserCompanyMapper userCompanyMapper;
 
     public List<UserCompanyResponse> getMyCompaniesAndRoles() {
         User loggedUser = authUserService.get();
@@ -60,13 +62,27 @@ public class UserCompanyService {
                         "Usuário não encontrado"
                 ));
 
-
         if (dto.getRole() == Role.ADMIN || dto.getRole() == Role.PRINCIPAL ) {
             throw new IllegalArgumentException("Papel administrativo inválido.");
         }
 
-        if (userCompanyRepository.existsByCompanyIdAndUserId(companyId, user.getId())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Usuário já pertence a esta empresa.");
+        Optional<UserCompany> existingUserCompany =
+                userCompanyRepository.findByUserIdAndCompanyId(user.getId(), companyId);
+        if (existingUserCompany.isPresent()) {
+            UserCompany userCompany = existingUserCompany.get();
+
+            if (userCompany.getActive()) {
+                throw new ResponseStatusException(
+                        HttpStatus.CONFLICT,
+                        "Usuário já pertence a esta empresa."
+                );
+            }
+
+            userCompany.setActive(true);
+            userCompany.setRole(dto.getRole());
+
+            UserCompany saved = userCompanyRepository.save(userCompany);
+            return userCompanyMapper.toResponse(saved);
         }
 
         UserCompany userCompany = new UserCompany();
@@ -76,6 +92,6 @@ public class UserCompanyService {
 
         UserCompany saved = userCompanyRepository.save(userCompany);
 
-        return MapperUtil.parseObject(saved, UserCompanyResponse.class);
+        return userCompanyMapper.toResponse(saved);
     }
 }
