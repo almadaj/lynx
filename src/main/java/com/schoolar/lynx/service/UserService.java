@@ -131,6 +131,7 @@ public class UserService {
                 user.getProfilePhoto()
         );
     }
+//TODO: função de promoção para PRINCIPAL
 
 //    @Transactional
 //    public UserResponseDTO promoteToNewRole(UUID id, Role role){

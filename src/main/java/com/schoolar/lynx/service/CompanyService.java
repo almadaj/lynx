@@ -33,6 +33,7 @@ public class CompanyService {
     private final UserRepository userRepository;
     private final AuthenticatedUserService authUserService;
     private final UserCompanyRepository userCompanyRepository;
+    private final UserCompanyService userCompanyService;
     private final StorageService storageService;
 
     //TODO: inserção do criador já em UserCompany
@@ -82,6 +83,7 @@ public class CompanyService {
         Company company = MapperUtil.parseObject(dto, Company.class);
         company.setPrincipalTeacher(principal);
         Company savedCompany = companyRepository.save(company);
+        userCompanyService.createPrincipalUserCompany(principal, savedCompany);
         return MapperUtil.parseObject(savedCompany, CompanyResponseDTO.class);
     }
 

@@ -94,4 +94,29 @@ public class UserCompanyService {
 
         return userCompanyMapper.toResponse(saved);
     }
+
+    @Transactional
+    public UserCompanyResponse createPrincipalUserCompany(User user, Company company) {
+        Optional<UserCompany> existing =
+                userCompanyRepository.findByUserIdAndCompanyId(user.getId(), company.getId());
+
+        if (existing.isPresent()) {
+            UserCompany userCompany = existing.get();
+
+            userCompany.setActive(true);
+            userCompany.setRole(Role.PRINCIPAL);
+
+            UserCompany saved = userCompanyRepository.save(userCompany);
+            return userCompanyMapper.toResponse(saved);
+        }
+
+        UserCompany userCompany = new UserCompany();
+        userCompany.setUser(user);
+        userCompany.setCompany(company);
+        userCompany.setRole(Role.PRINCIPAL);
+
+        UserCompany saved = userCompanyRepository.save(userCompany);
+
+        return userCompanyMapper.toResponse(saved);
+    }
 }
