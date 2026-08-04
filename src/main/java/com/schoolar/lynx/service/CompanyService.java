@@ -277,18 +277,29 @@ public class CompanyService {
                         List.of(Role.TEACHER, Role.HEADTEACHER, Role.PRINCIPAL)
                 )
                 .stream()
-                .map(UserCompany::getUser)
-                .filter(User::isActive)
-                .peek(user -> {
-                    if (user.getProfilePhoto() != null) {
-                        user.setProfilePhoto(
-                                storageService.getUrl(user.getProfilePhoto())
-                        );
-                    }
-                })
-                .map(UserMapper::toResponseDTO)
-                .toList();
+                .filter(uc -> uc.getUser().isActive())
+                .map(uc -> {
 
+                    User user = uc.getUser();
+
+                    if (user.getProfilePhoto() != null) {
+                        user.setProfilePhoto(storageService.getUrl(user.getProfilePhoto()));
+                    }
+
+                    UserResponseDTO dto = UserMapper.toResponseDTO(user);
+
+                    dto.setCompanies(List.of(
+                            new UserCompanyResponse(
+                                    uc.getCompany().getId(),
+                                    uc.getCompany().getCompanyName(),
+                                    uc.getCompany().getPublicName(),
+                                    uc.getRole()
+                            )
+                    ));
+
+                    return dto;
+                })
+                .toList();
     }
 
     public List<UserResponseDTO> getStudentsBySchoolId(UUID companyId) {
@@ -311,17 +322,28 @@ public class CompanyService {
                         List.of(Role.STUDENT)
                 )
                 .stream()
-                .map(UserCompany::getUser)
-                .filter(User::isActive)
-                .peek(user -> {
-                    if (user.getProfilePhoto() != null) {
-                        user.setProfilePhoto(
-                                storageService.getUrl(user.getProfilePhoto())
-                        );
-                    }
-                })
-                .map(UserMapper::toResponseDTO)
-                .toList();
+                .filter(uc -> uc.getUser().isActive())
+                .map(uc -> {
 
+                    User user = uc.getUser();
+
+                    if (user.getProfilePhoto() != null) {
+                        user.setProfilePhoto(storageService.getUrl(user.getProfilePhoto()));
+                    }
+
+                    UserResponseDTO dto = UserMapper.toResponseDTO(user);
+
+                    dto.setCompanies(List.of(
+                            new UserCompanyResponse(
+                                    uc.getCompany().getId(),
+                                    uc.getCompany().getCompanyName(),
+                                    uc.getCompany().getPublicName(),
+                                    uc.getRole()
+                            )
+                    ));
+
+                    return dto;
+                })
+                .toList();
     }
 }
