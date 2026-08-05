@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import software.amazon.awssdk.services.s3.endpoints.internal.Value;
 
 import java.util.List;
 import java.util.UUID;
@@ -49,6 +50,11 @@ public class CompanyController {
     @GetMapping("/{id}/students")
     public ResponseEntity<List<UserResponseDTO>> getAllStudentsByCompany(@PathVariable UUID id){
         return ResponseEntity.ok(service.getStudentsBySchoolId(id));
+    }
+
+    @PostMapping("/{id}/students")
+    public ResponseEntity<UserCompanyResponse> addStudentToCompany(@PathVariable UUID id, @RequestBody String email){
+        return ResponseEntity.ok(userCompanyService.addStudentToCompany(id, email));
     }
 
     @PostMapping("/{id}/teachers")

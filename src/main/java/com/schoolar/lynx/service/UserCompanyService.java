@@ -96,6 +96,48 @@ public class UserCompanyService {
     }
 
     @Transactional
+    public UserCompanyResponse addStudentToCompany(UUID companyId, String email) {
+        authorizationService.require(Role.HEADTEACHER, companyId);
+
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Empresa não encontrada"
+                ));
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Usuário não encontrado"
+                ));
+
+        Optional<UserCompany> existingUserCompany =
+                userCompanyRepository.findByUserIdAndCompanyId(user.getId(), companyId);
+        if (existingUserCompany.isPresent()) {
+            UserCompany userCompany = existingUserCompany.get();
+
+            if (userCompany.getActive()) {
+                throw new ResponseStatusException(
+                        HttpStatus.CONFLICT,
+                        "Usuário já pertence a esta empresa."
+                );
+            }
+            userCompany.setActive(true);
+            userCompany.setRole(Role.STUDENT);
+
+            UserCompany saved = userCompanyRepository.save(userCompany);
+            return userCompanyMapper.toResponse(saved);
+        }
+
+        UserCompany userCompany = new UserCompany();
+        userCompany.setCompany(company);
+        userCompany.setUser(user);
+        userCompany.setRole(Role.STUDENT);
+
+        UserCompany saved = userCompanyRepository.save(userCompany);
+        return userCompanyMapper.toResponse(saved);
+    }
+
+    @Transactional
     public UserCompanyResponse createPrincipalUserCompany(User user, Company company) {
         Optional<UserCompany> existing =
                 userCompanyRepository.findByUserIdAndCompanyId(user.getId(), company.getId());
