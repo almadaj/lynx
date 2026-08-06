@@ -61,4 +61,9 @@ public class CompanyController {
     public ResponseEntity<UserCompanyResponse> addTeacherToCompany(@PathVariable UUID id, @RequestBody AddNewMemberDTO dto){
         return ResponseEntity.ok(userCompanyService.addTeacherToCompany(id, dto));
     }
+
+    @PutMapping("/{id}/promote")
+    public ResponseEntity<UserCompanyResponse> promoteTeacher(@PathVariable UUID id, @RequestBody AddNewMemberDTO dto){
+        return ResponseEntity.ok(userCompanyService.promoteToNewRole(id, dto));
+    }
 }
