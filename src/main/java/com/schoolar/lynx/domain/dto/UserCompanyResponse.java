@@ -11,6 +11,7 @@ import java.util.UUID;
 @Setter
 @Getter
 public class UserCompanyResponse {
+    private UUID userCompanyId;
     private UUID companyId;
     private String companyName;
     private String publicName;

@@ -66,4 +66,9 @@ public class CompanyController {
     public ResponseEntity<UserCompanyResponse> promoteTeacher(@PathVariable UUID id, @RequestBody AddNewMemberDTO dto){
         return ResponseEntity.ok(userCompanyService.promoteToNewRole(id, dto));
     }
+
+    @GetMapping("/{id}/member/{userCompanyId}")
+    public ResponseEntity<UserResponseDTO> getMemberById(@PathVariable UUID id, @PathVariable UUID userCompanyId){
+        return ResponseEntity.ok(userCompanyService.getMemberById(id, userCompanyId));
+    }
 }

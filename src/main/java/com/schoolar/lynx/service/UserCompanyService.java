@@ -5,6 +5,7 @@ import com.schoolar.lynx.domain.dto.UserCompanyResponse;
 import com.schoolar.lynx.domain.dto.UserResponseDTO;
 import com.schoolar.lynx.domain.enums.Role;
 import com.schoolar.lynx.domain.mapper.UserCompanyMapper;
+import com.schoolar.lynx.domain.mapper.UserMapper;
 import com.schoolar.lynx.domain.model.Company;
 import com.schoolar.lynx.domain.model.User;
 import com.schoolar.lynx.domain.model.UserCompany;
@@ -12,6 +13,7 @@ import com.schoolar.lynx.repository.CompanyRepository;
 import com.schoolar.lynx.repository.UserCompanyRepository;
 import com.schoolar.lynx.repository.UserRepository;
 import com.schoolar.lynx.security.AuthenticatedUserService;
+import com.schoolar.lynx.storage.StorageService;
 import com.schoolar.lynx.utils.MapperUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +37,7 @@ public class UserCompanyService {
     private final CompanyRepository companyRepository;
     private final UserCompanyRepository userCompanyRepository;
     private final CompanyAuthorizationService authorizationService;
+    private final StorageService storageService;
     private final UserCompanyMapper userCompanyMapper;
 
     public List<UserCompanyResponse> getMyCompaniesAndRoles() {
@@ -166,7 +169,6 @@ public class UserCompanyService {
         return userCompanyMapper.toResponse(saved);
     }
 
-
     @Transactional
     public UserCompanyResponse promoteToNewRole(UUID companyId, AddNewMemberDTO dto) {
         authorizationService.require(Role.HEADTEACHER, companyId);
@@ -221,5 +223,44 @@ public class UserCompanyService {
         userCompany.setRole(dto.getRole());
         UserCompany saved = userCompanyRepository.save(userCompany);
         return userCompanyMapper.toResponse(saved);
+    }
+
+    public UserResponseDTO getMemberById(UUID companyId, UUID userCompanyId) {
+
+        UserCompany userCompany = userCompanyRepository
+                .findByIdAndCompanyId(userCompanyId, companyId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Membro não encontrado nesta empresa"
+                ));
+
+        User user = userCompany.getUser();
+
+        if (!user.isActive()) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Usuário está inativo"
+            );
+        }
+
+        if (user.getProfilePhoto() != null) {
+            user.setProfilePhoto(
+                    storageService.getUrl(user.getProfilePhoto())
+            );
+        }
+
+        UserResponseDTO dto = UserMapper.toResponseDTO(user);
+
+        dto.setCompanies(List.of(
+                new UserCompanyResponse(
+                        userCompany.getId(),
+                        userCompany.getCompany().getId(),
+                        userCompany.getCompany().getCompanyName(),
+                        userCompany.getCompany().getPublicName(),
+                        userCompany.getRole()
+                )
+        ));
+
+        return dto;
     }
 }

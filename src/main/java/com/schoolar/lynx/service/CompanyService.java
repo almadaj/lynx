@@ -290,6 +290,7 @@ public class CompanyService {
 
                     dto.setCompanies(List.of(
                             new UserCompanyResponse(
+                                    uc.getId(),
                                     uc.getCompany().getId(),
                                     uc.getCompany().getCompanyName(),
                                     uc.getCompany().getPublicName(),
@@ -335,6 +336,7 @@ public class CompanyService {
 
                     dto.setCompanies(List.of(
                             new UserCompanyResponse(
+                                    uc.getId(),
                                     uc.getCompany().getId(),
                                     uc.getCompany().getCompanyName(),
                                     uc.getCompany().getPublicName(),

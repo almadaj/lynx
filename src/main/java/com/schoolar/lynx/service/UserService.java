@@ -131,22 +131,6 @@ public class UserService {
                 user.getProfilePhoto()
         );
     }
-//TODO: função de promoção para PRINCIPAL
-
-//    @Transactional
-//    public UserResponseDTO promoteToNewRole(UUID id, Role role){
-//        User user = repository.findById(id)
-//                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
-//        User loggedUser = authenticatedUserService.get();
-//
-//        if (loggedUser.getRole().equals(Role.ADMIN) || loggedUser.getRole().equals(Role.HEADTEACHER)) {
-//            user.setRole(role);
-//            repository.save(user);
-//
-//            return MapperUtil.parseObject(user, UserResponseDTO.class);
-//        }
-//        throw new RuntimeException("Somente administradores podem promover usuários");
-//    }
 
     @Transactional
     public void deleteProfilePhoto(UUID userId){
