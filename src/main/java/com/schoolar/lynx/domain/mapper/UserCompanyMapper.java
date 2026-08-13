@@ -15,6 +15,7 @@ public class UserCompanyMapper {
         response.setCompanyName(entity.getCompany().getCompanyName());
         response.setPublicName(entity.getCompany().getPublicName());
         response.setRole(entity.getRole());
+        response.setActive(entity.getActive());
 
         return response;
     }

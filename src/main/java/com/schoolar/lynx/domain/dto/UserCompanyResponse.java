@@ -15,5 +15,6 @@ public class UserCompanyResponse {
     private UUID companyId;
     private String companyName;
     private String publicName;
+    private boolean active;
     private Role role;
 }

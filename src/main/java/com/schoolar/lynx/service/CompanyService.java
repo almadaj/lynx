@@ -36,7 +36,6 @@ public class CompanyService {
     private final UserCompanyService userCompanyService;
     private final StorageService storageService;
 
-    //TODO: inserção do criador já em UserCompany
     public CompanyResponseDTO create(RegisterCompanyDTO dto) {
         Authentication authentication = SecurityContextHolder
                 .getContext()
@@ -294,6 +293,7 @@ public class CompanyService {
                                     uc.getCompany().getId(),
                                     uc.getCompany().getCompanyName(),
                                     uc.getCompany().getPublicName(),
+                                    uc.getActive(),
                                     uc.getRole()
                             )
                     ));
@@ -340,6 +340,7 @@ public class CompanyService {
                                     uc.getCompany().getId(),
                                     uc.getCompany().getCompanyName(),
                                     uc.getCompany().getPublicName(),
+                                    uc.getActive(),
                                     uc.getRole()
                             )
                     ));

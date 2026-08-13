@@ -1,8 +1,6 @@
 package com.schoolar.lynx.service;
 
-import com.schoolar.lynx.domain.dto.AddNewMemberDTO;
-import com.schoolar.lynx.domain.dto.UserCompanyResponse;
-import com.schoolar.lynx.domain.dto.UserResponseDTO;
+import com.schoolar.lynx.domain.dto.*;
 import com.schoolar.lynx.domain.enums.Role;
 import com.schoolar.lynx.domain.mapper.UserCompanyMapper;
 import com.schoolar.lynx.domain.mapper.UserMapper;
@@ -170,9 +168,9 @@ public class UserCompanyService {
     }
 
     @Transactional
-    public UserCompanyResponse promoteToNewRole(UUID companyId, AddNewMemberDTO dto) {
+    public UserCompanyResponse promoteToNewRole(UUID companyId, PromoteUserDTO dto) {
         authorizationService.require(Role.HEADTEACHER, companyId);
-        User user = userRepository.findByEmail(dto.getEmail())
+        User user = userRepository.findById(dto.getUserId())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Usuário não encontrado"
@@ -184,7 +182,7 @@ public class UserCompanyService {
                         "Instituição não encontrado"
                 ));
 
-        if (company.getPrincipalTeacher().getId() == user.getId()){
+        if (company.getPrincipalTeacher().getId().equals(user.getId())){
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Não é possível alterar papel do fundador da instituição"
@@ -225,6 +223,34 @@ public class UserCompanyService {
         return userCompanyMapper.toResponse(saved);
     }
 
+    @Transactional
+    public UserCompanyResponse changeUserStatus(UUID companyId, ChangeUserStatusDTO dto) {
+        authorizationService.require(Role.HEADTEACHER, companyId);
+        UserCompany uc = userCompanyRepository.findByIdAndCompanyId(dto.getUserCompanyId(), companyId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Usuário não encontrado"
+                ));
+
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Instituição não encontrado"
+                ));
+
+        if (company.getPrincipalTeacher().getId().equals(uc.getUser().getId())){
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Não é possível alterar status do fundador da instituição"
+            );
+        }
+
+        uc.setActive(dto.isStatus());
+
+        UserCompany saved = userCompanyRepository.save(uc);
+        return userCompanyMapper.toResponse(saved);
+    }
+
     public UserResponseDTO getMemberById(UUID companyId, UUID userCompanyId) {
 
         UserCompany userCompany = userCompanyRepository
@@ -257,6 +283,7 @@ public class UserCompanyService {
                         userCompany.getCompany().getId(),
                         userCompany.getCompany().getCompanyName(),
                         userCompany.getCompany().getPublicName(),
+                        userCompany.getActive(),
                         userCompany.getRole()
                 )
         ));

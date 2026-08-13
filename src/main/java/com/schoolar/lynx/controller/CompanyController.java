@@ -63,8 +63,13 @@ public class CompanyController {
     }
 
     @PutMapping("/{id}/promote")
-    public ResponseEntity<UserCompanyResponse> promoteTeacher(@PathVariable UUID id, @RequestBody AddNewMemberDTO dto){
+    public ResponseEntity<UserCompanyResponse> promoteTeacher(@PathVariable UUID id, @RequestBody PromoteUserDTO dto){
         return ResponseEntity.ok(userCompanyService.promoteToNewRole(id, dto));
+    }
+
+    @PutMapping("/{id}/status")
+    public ResponseEntity<UserCompanyResponse> changeStatus(@PathVariable UUID id, @RequestBody ChangeUserStatusDTO dto){
+        return ResponseEntity.ok(userCompanyService.changeUserStatus(id, dto));
     }
 
     @GetMapping("/{id}/member/{userCompanyId}")
