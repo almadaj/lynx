@@ -1,12 +1,12 @@
 package com.schoolar.lynx.domain.dto;
 
-import com.schoolar.lynx.domain.enums.Role;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -19,7 +19,7 @@ public class UserResponseDTO {
     private String email;
     private LocalDate birth;
     private String profilePhoto;
-    private Role role;
     private boolean isActive;
+    private List<UserCompanyResponse> companies;
     private boolean isAdmin;
 }

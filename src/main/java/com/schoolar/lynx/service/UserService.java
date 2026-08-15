@@ -1,25 +1,25 @@
 package com.schoolar.lynx.service;
 
+import com.schoolar.lynx.domain.dto.UserCompanyResponse;
 import com.schoolar.lynx.domain.dto.UserDTO;
 import com.schoolar.lynx.domain.dto.UserResponseDTO;
-import com.schoolar.lynx.domain.enums.Role;
+import com.schoolar.lynx.domain.mapper.UserMapper;
 import com.schoolar.lynx.domain.model.User;
 import com.schoolar.lynx.repository.UserRepository;
 import com.schoolar.lynx.security.AuthenticatedUserService;
 import com.schoolar.lynx.storage.RailwayStorageService;
-import com.schoolar.lynx.storage.StorageService;
 import com.schoolar.lynx.utils.MapperUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -29,6 +29,7 @@ public class UserService {
     private final UserRepository repository;
     private final RailwayStorageService storageService;
     private final AuthenticatedUserService authenticatedUserService;
+    private final UserCompanyService userCompanyService;
 
     public UserResponseDTO findById(UUID id) {
         User user = repository.findById(id)
@@ -40,7 +41,28 @@ public class UserService {
         if (!user.isActive()) {
             throw new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
-                    "Usuário não existe mais"
+                    "Usuário não encontrado"
+            );
+        }
+
+        UserResponseDTO dto = MapperUtil.parseObject(user, UserResponseDTO.class);
+        dto.setProfilePhoto(
+                storageService.getUrl(user.getProfilePhoto())
+        );
+        return dto;
+    }
+
+    public UserResponseDTO findByEmail(String email) {
+        User user = repository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Usuário não encontrado"
+                ));
+
+        if (!user.isActive()) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Usuário não encontrado"
             );
         }
 
@@ -111,21 +133,6 @@ public class UserService {
     }
 
     @Transactional
-    public UserResponseDTO promoteToNewRole(UUID id, Role role){
-        User user = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
-        User loggedUser = authenticatedUserService.get();
-
-        if (loggedUser.getRole().equals(Role.ADMIN) || loggedUser.getRole().equals(Role.HEADTEACHER)) {
-            user.setRole(role);
-            repository.save(user);
-
-            return MapperUtil.parseObject(user, UserResponseDTO.class);
-        }
-        throw new RuntimeException("Somente administradores podem promover usuários");
-    }
-
-    @Transactional
     public void deleteProfilePhoto(UUID userId){
         User user = repository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
@@ -157,6 +164,10 @@ public class UserService {
                 .orElseThrow(()-> new RuntimeException("Usuário não encontrado"));
 
         user.setProfilePhoto(storageService.getUrl(String.valueOf(user.getProfilePhoto())));
-        return MapperUtil.parseObject(user, UserResponseDTO.class);
+        List<UserCompanyResponse> companies = userCompanyService.getMyCompaniesAndRoles();
+
+        UserResponseDTO dto = UserMapper.toResponseDTO(user);
+        dto.setCompanies(companies);
+        return dto;
     }
 }

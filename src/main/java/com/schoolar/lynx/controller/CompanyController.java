@@ -1,15 +1,15 @@
 package com.schoolar.lynx.controller;
 
-import com.schoolar.lynx.domain.dto.CompanyResponseDTO;
-import com.schoolar.lynx.domain.dto.RegisterCompanyDTO;
-import com.schoolar.lynx.domain.dto.UpdateCompanyDTO;
-import com.schoolar.lynx.domain.dto.UserResponseDTO;
+import com.schoolar.lynx.domain.dto.*;
+import com.schoolar.lynx.domain.enums.Role;
 import com.schoolar.lynx.service.CompanyService;
+import com.schoolar.lynx.service.UserCompanyService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import software.amazon.awssdk.services.s3.endpoints.internal.Value;
 
 import java.util.List;
 import java.util.UUID;
@@ -20,6 +20,7 @@ import java.util.UUID;
 public class CompanyController {
     @Autowired
     private final CompanyService service;
+    private final UserCompanyService userCompanyService;
 
     @PostMapping
     public ResponseEntity<CompanyResponseDTO> createCompany(@Valid @RequestBody RegisterCompanyDTO dto){
@@ -44,5 +45,35 @@ public class CompanyController {
     @GetMapping("/{id}/teachers")
     public ResponseEntity<List<UserResponseDTO>> getAllTeachersByCompany(@PathVariable UUID id){
         return ResponseEntity.ok(service.getTeachersBySchoolId(id));
+    }
+
+    @GetMapping("/{id}/students")
+    public ResponseEntity<List<UserResponseDTO>> getAllStudentsByCompany(@PathVariable UUID id){
+        return ResponseEntity.ok(service.getStudentsBySchoolId(id));
+    }
+
+    @PostMapping("/{id}/students")
+    public ResponseEntity<UserCompanyResponse> addStudentToCompany(@PathVariable UUID id, @RequestBody String email){
+        return ResponseEntity.ok(userCompanyService.addStudentToCompany(id, email));
+    }
+
+    @PostMapping("/{id}/teachers")
+    public ResponseEntity<UserCompanyResponse> addTeacherToCompany(@PathVariable UUID id, @RequestBody AddNewMemberDTO dto){
+        return ResponseEntity.ok(userCompanyService.addTeacherToCompany(id, dto));
+    }
+
+    @PutMapping("/{id}/promote")
+    public ResponseEntity<UserCompanyResponse> promoteTeacher(@PathVariable UUID id, @RequestBody PromoteUserDTO dto){
+        return ResponseEntity.ok(userCompanyService.promoteToNewRole(id, dto));
+    }
+
+    @PutMapping("/{id}/status")
+    public ResponseEntity<UserCompanyResponse> changeStatus(@PathVariable UUID id, @RequestBody ChangeUserStatusDTO dto){
+        return ResponseEntity.ok(userCompanyService.changeUserStatus(id, dto));
+    }
+
+    @GetMapping("/{id}/member/{userCompanyId}")
+    public ResponseEntity<UserResponseDTO> getMemberById(@PathVariable UUID id, @PathVariable UUID userCompanyId){
+        return ResponseEntity.ok(userCompanyService.getMemberById(id, userCompanyId));
     }
 }

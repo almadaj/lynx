@@ -4,7 +4,6 @@ import com.schoolar.lynx.domain.dto.UserResponseDTO;
 import com.schoolar.lynx.domain.model.User;
 
 public class UserMapper {
-
     public static UserResponseDTO toResponseDTO(User user) {
         if (user == null) {
             return null;
@@ -19,8 +18,6 @@ public class UserMapper {
         dto.setProfilePhoto(user.getProfilePhoto());
         dto.setActive(user.isActive());
         dto.setAdmin(user.isAdmin());
-        dto.setRole(user.getRole());
-
         return dto;
     }
 }

@@ -1,12 +1,17 @@
 package com.schoolar.lynx.service;
 
 import com.schoolar.lynx.domain.dto.*;
+import com.schoolar.lynx.domain.enums.Role;
+import com.schoolar.lynx.domain.mapper.UserMapper;
 import com.schoolar.lynx.domain.model.Company;
 import com.schoolar.lynx.domain.model.User;
+import com.schoolar.lynx.domain.model.UserCompany;
 import com.schoolar.lynx.repository.CompanyRepository;
+import com.schoolar.lynx.repository.UserCompanyRepository;
 import com.schoolar.lynx.repository.UserRepository;
 import com.schoolar.lynx.security.AuthenticatedUserService;
 import com.schoolar.lynx.security.UserDetailsImpl;
+import com.schoolar.lynx.storage.StorageService;
 import com.schoolar.lynx.utils.MapperUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -27,7 +32,9 @@ public class CompanyService {
     private final CompanyRepository companyRepository;
     private final UserRepository userRepository;
     private final AuthenticatedUserService authUserService;
-    private final CourseClassService courseService;
+    private final UserCompanyRepository userCompanyRepository;
+    private final UserCompanyService userCompanyService;
+    private final StorageService storageService;
 
     public CompanyResponseDTO create(RegisterCompanyDTO dto) {
         Authentication authentication = SecurityContextHolder
@@ -75,6 +82,7 @@ public class CompanyService {
         Company company = MapperUtil.parseObject(dto, Company.class);
         company.setPrincipalTeacher(principal);
         Company savedCompany = companyRepository.save(company);
+        userCompanyService.createPrincipalUserCompany(principal, savedCompany);
         return MapperUtil.parseObject(savedCompany, CompanyResponseDTO.class);
     }
 
@@ -248,8 +256,8 @@ public class CompanyService {
         return savedCompany;
     }
 
-    public List<UserResponseDTO> getTeachersBySchoolId(UUID id) {
-        Company company = companyRepository.findById(id)
+    public List<UserResponseDTO> getTeachersBySchoolId(UUID companyId) {
+        Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Empresa não encontrada"
@@ -261,17 +269,84 @@ public class CompanyService {
                     "Empresa está inativa"
             );
         }
-        List<CourseClassResponseDTO> courses = courseService.findCoursesByCompany(id);
-        return courses.stream()
-                .map(CourseClassResponseDTO::getTeacher)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toMap(
-                        UserResponseDTO::getId,
-                        teacher -> teacher,
-                        (existing, duplicate) -> existing
-                ))
-                .values()
+
+        return userCompanyRepository
+                .findAllByCompanyIdAndRoleIn(
+                        companyId,
+                        List.of(Role.TEACHER, Role.HEADTEACHER, Role.PRINCIPAL)
+                )
                 .stream()
+                .filter(uc -> uc.getUser().isActive())
+                .map(uc -> {
+
+                    User user = uc.getUser();
+
+                    if (user.getProfilePhoto() != null) {
+                        user.setProfilePhoto(storageService.getUrl(user.getProfilePhoto()));
+                    }
+
+                    UserResponseDTO dto = UserMapper.toResponseDTO(user);
+
+                    dto.setCompanies(List.of(
+                            new UserCompanyResponse(
+                                    uc.getId(),
+                                    uc.getCompany().getId(),
+                                    uc.getCompany().getCompanyName(),
+                                    uc.getCompany().getPublicName(),
+                                    uc.getActive(),
+                                    uc.getRole()
+                            )
+                    ));
+
+                    return dto;
+                })
+                .toList();
+    }
+
+    public List<UserResponseDTO> getStudentsBySchoolId(UUID companyId) {
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Empresa não encontrada"
+                ));
+
+        if (!company.isActive()) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Empresa está inativa"
+            );
+        }
+
+        return userCompanyRepository
+                .findAllByCompanyIdAndRoleIn(
+                        companyId,
+                        List.of(Role.STUDENT)
+                )
+                .stream()
+                .filter(uc -> uc.getUser().isActive())
+                .map(uc -> {
+
+                    User user = uc.getUser();
+
+                    if (user.getProfilePhoto() != null) {
+                        user.setProfilePhoto(storageService.getUrl(user.getProfilePhoto()));
+                    }
+
+                    UserResponseDTO dto = UserMapper.toResponseDTO(user);
+
+                    dto.setCompanies(List.of(
+                            new UserCompanyResponse(
+                                    uc.getId(),
+                                    uc.getCompany().getId(),
+                                    uc.getCompany().getCompanyName(),
+                                    uc.getCompany().getPublicName(),
+                                    uc.getActive(),
+                                    uc.getRole()
+                            )
+                    ));
+
+                    return dto;
+                })
                 .toList();
     }
 }

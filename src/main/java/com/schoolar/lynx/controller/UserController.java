@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.util.UUID;
 
 @RestController
@@ -40,6 +39,11 @@ public class UserController {
         return ResponseEntity.ok(service.findById(id));
     }
 
+    @GetMapping("/email={email}")
+    public ResponseEntity<UserResponseDTO> findUserByEmail(@PathVariable String email) {
+        return ResponseEntity.ok(service.findByEmail(email));
+    }
+
     @GetMapping("/me")
     public ResponseEntity<UserResponseDTO> findMyInfo(){
         return ResponseEntity.ok(service.getOwnInfo());
@@ -52,16 +56,6 @@ public class UserController {
     ) throws IOException {
         service.uploadProfilePhoto(id, file);
         return ResponseEntity.noContent().build();
-    }
-
-    //TODO: testar
-    @PostMapping("/{id}/promote")
-    public ResponseEntity<UserResponseDTO> promoteUserToNewRole(
-            @PathVariable UUID id,
-            @RequestBody Role role
-    ) {
-        UserResponseDTO updatedUser = service.promoteToNewRole(id, role);
-        return ResponseEntity.ok(updatedUser);
     }
 
     @DeleteMapping("/{id}/photo")
