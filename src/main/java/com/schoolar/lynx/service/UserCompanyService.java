@@ -170,6 +170,7 @@ public class UserCompanyService {
     @Transactional
     public UserCompanyResponse promoteToNewRole(UUID companyId, PromoteUserDTO dto) {
         authorizationService.require(Role.HEADTEACHER, companyId);
+        User loggedUser = authUserService.get();
         User user = userRepository.findById(dto.getUserId())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
@@ -186,6 +187,13 @@ public class UserCompanyService {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Não é possível alterar papel do fundador da instituição"
+            );
+        }
+
+        if (user.getId().equals(loggedUser.getId())){
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Não é possível alterar o próprio papel"
             );
         }
 
@@ -226,6 +234,7 @@ public class UserCompanyService {
     @Transactional
     public UserCompanyResponse changeUserStatus(UUID companyId, ChangeUserStatusDTO dto) {
         authorizationService.require(Role.HEADTEACHER, companyId);
+        User loggedUser = authUserService.get();
         UserCompany uc = userCompanyRepository.findByIdAndCompanyId(dto.getUserCompanyId(), companyId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
@@ -242,6 +251,13 @@ public class UserCompanyService {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Não é possível alterar status do fundador da instituição"
+            );
+        }
+
+        if (uc.getUser().getId().equals(loggedUser.getId())){
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Não é possível alterar o próprio status"
             );
         }
 
