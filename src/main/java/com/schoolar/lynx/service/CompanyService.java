@@ -58,13 +58,6 @@ public class CompanyService {
                         "Professor não encontrado"
                 ));
 
-        if (!loggedUser.isAdmin()) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN,
-                    "Estudantes não podem criar instituições"
-            );
-        }
-
         if (companyRepository.existsByEmail(dto.getEmail())) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
@@ -144,7 +137,6 @@ public class CompanyService {
             teacherDTO.setEmail(principalTeacher.getEmail());
             teacherDTO.setBirth(principalTeacher.getBirth());
             teacherDTO.setActive(principalTeacher.isActive());
-            teacherDTO.setAdmin(principalTeacher.isAdmin());
 
             dto.setPrincipalTeacher(teacherDTO);
         }

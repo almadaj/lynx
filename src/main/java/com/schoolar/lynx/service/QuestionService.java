@@ -3,6 +3,7 @@ package com.schoolar.lynx.service;
 import com.schoolar.lynx.domain.dto.QuestionResponseDTO;
 import com.schoolar.lynx.domain.dto.RegisterQuestionDTO;
 import com.schoolar.lynx.domain.dto.UpdateQuestionDTO;
+import com.schoolar.lynx.domain.enums.Role;
 import com.schoolar.lynx.domain.mapper.QuestionMapper;
 import com.schoolar.lynx.domain.model.Company;
 import com.schoolar.lynx.domain.model.Question;
@@ -10,7 +11,6 @@ import com.schoolar.lynx.domain.model.User;
 import com.schoolar.lynx.repository.CompanyRepository;
 import com.schoolar.lynx.repository.QuestionRepository;
 import com.schoolar.lynx.security.AuthenticatedUserService;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,20 +27,16 @@ public class QuestionService {
     private final QuestionRepository questionRepository;
     private final AuthenticatedUserService authUserService;
     private final CompanyRepository companyRepository;
+    private final CompanyAuthorizationService authorizationService;
 
     public QuestionResponseDTO create(RegisterQuestionDTO dto){
+        authorizationService.require(Role.TEACHER, dto.getCompanyId());
         User loggedUser = authUserService.get();
         Company company = companyRepository.findById(dto.getCompanyId())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Empresa não encontrada"
                 ));
-        if (!loggedUser.isAdmin()){
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN,
-                    "Apenas o professor pode alterar questão"
-            );
-        }
 
         if (dto.getCompanyId() == null){
             throw new ResponseStatusException(
@@ -56,19 +52,18 @@ public class QuestionService {
 
     public QuestionResponseDTO update(UUID id, UpdateQuestionDTO dto){
         User loggedUser = authUserService.get();
-
-        if (!loggedUser.isAdmin()) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN,
-                    "Apenas o professor pode alterar questão"
-            );
-        }
-
         Question question = questionRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Questão não encontrada"
                 ));
+
+        authorizationService.require(Role.TEACHER, question.getCompany().getId());
+
+        if (!loggedUser.getId().equals(question.getAuthor().getId())){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Somente o autor pode alterar");
+        }
 
         QuestionMapper.updateEntity(question, dto);
         Question saved = questionRepository.save(question);
@@ -77,18 +72,19 @@ public class QuestionService {
 
     public String delete (UUID id){
         User loggedUser = authUserService.get();
-        if (!loggedUser.isAdmin()){
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN,
-                    "Apenas o professor principal pode alterar esta empresa"
-            );
-        }
 
         Question question = questionRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Questão não encontrada"
                 ));
+        authorizationService.require(Role.TEACHER, question.getCompany().getId());
+
+        if (!loggedUser.getId().equals(question.getAuthor().getId())){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Somente o autor pode excluir");
+        }
+
         question.setUpdatedAt(LocalDateTime.now());
         question.setDeletedAt(LocalDateTime.now());
         questionRepository.save(question);
@@ -101,7 +97,6 @@ public class QuestionService {
     }
 
     public QuestionResponseDTO findById(UUID id){
-        User loggedUser = authUserService.get();
         Question question = questionRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,

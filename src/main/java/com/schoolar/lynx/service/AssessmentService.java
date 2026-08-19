@@ -1,6 +1,7 @@
 package com.schoolar.lynx.service;
 
 import com.schoolar.lynx.domain.dto.AssessmentRequestDTO;
+import com.schoolar.lynx.domain.enums.Role;
 import com.schoolar.lynx.domain.model.Assessment;
 import com.schoolar.lynx.domain.model.CourseClass;
 import com.schoolar.lynx.domain.model.User;
@@ -23,6 +24,7 @@ public class AssessmentService {
     private final AuthenticatedUserService authUserService;
     private final CourseClassRepository courseRepository;
     private final AssessmentRepository assessmentRepository;
+    private final CompanyAuthorizationService authorizationService;
 
     public Assessment create (AssessmentRequestDTO dto){
         User loggedUser = authUserService.get();
@@ -32,13 +34,8 @@ public class AssessmentService {
                         "Turma não encontrada"
                 ));
 
-        if (!loggedUser.isAdmin() ||
-                !loggedUser.getId().equals(course.getTeacher().getId())
-        ){
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN,
-                    "Somente o professor da disciplina pode criar avaliações"
-            );
+        if (authorizationService.getUserRole(loggedUser.getId(), course.getCompany().getId()).equals(Role.TEACHER)){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Usuário sem autorização");
         }
 
         if (dto.getLimitDate() != null &&

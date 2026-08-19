@@ -1,7 +1,7 @@
 package com.schoolar.lynx.service;
 
-import com.schoolar.lynx.domain.dto.CourseClassResponseDTO;
 import com.schoolar.lynx.domain.dto.StudentsToCourseClassDTO;
+import com.schoolar.lynx.domain.enums.Role;
 import com.schoolar.lynx.domain.model.CourseClass;
 import com.schoolar.lynx.domain.model.CourseClassStudent;
 import com.schoolar.lynx.domain.model.User;
@@ -16,8 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -27,23 +25,19 @@ public class CourseClassStudentsService {
     private final CourseClassRepository courseClassRepository;
     private final UserRepository userRepository;
     private final AuthenticatedUserService authService;
+    private final CompanyAuthorizationService authorizationService;
 
     @Transactional
     public void addStudent(UUID classId, StudentsToCourseClassDTO dto) {
         User loggedUser = authService.get();
-
-        if (!loggedUser.isAdmin()){
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN,
-                    "Somente professores podem fazer alterações"
-            );
-        }
 
         CourseClass courseClass = courseClassRepository.findById(classId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Turma não encontrada"
                 ));
+
+        authorizationService.require(Role.HEADTEACHER, courseClass.getCompany().getId());
 
         if (!loggedUser.getId().equals(courseClass.getTeacher().getId()) &&
                 !loggedUser.getId().equals(courseClass.getCompany().getPrincipalTeacher().getId())
@@ -59,13 +53,6 @@ public class CourseClassStudentsService {
                         HttpStatus.NOT_FOUND,
                         "Aluno não encontrado"
                 ));
-
-        if (student.isAdmin()){
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN,
-                    "Professores não podem se matricular em disciplinas"
-            );
-        }
 
         if(courseClass.getStudents().size() >= courseClass.getMaxStudents()){
             throw new ResponseStatusException(
@@ -101,18 +88,13 @@ public class CourseClassStudentsService {
     public void removeStudent(UUID classId, UUID studentId) {
         User loggedUser = authService.get();
 
-        if (!loggedUser.isAdmin()){
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN,
-                    "Somente professores podem fazer alterações"
-            );
-        }
-
         CourseClass courseClass = courseClassRepository.findById(classId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Turma não encontrada"
                 ));
+
+        authorizationService.require(Role.HEADTEACHER, courseClass.getCompany().getId());
 
         if (!loggedUser.getId().equals(courseClass.getTeacher().getId()) &&
                 !loggedUser.getId().equals(courseClass.getCompany().getPrincipalTeacher().getId())) {
@@ -135,33 +117,19 @@ public class CourseClassStudentsService {
 
     @Transactional
     public void transferStudent(UUID classId, UUID studentId, UUID newClassId){
-        User loggedUser = authService.get();
-
-        if (!loggedUser.isAdmin()){
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN,
-                    "Somente professores podem fazer alterações"
-            );
-        }
-
         CourseClass courseClass = courseClassRepository.findById(classId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Turma não encontrada"
                 ));
 
+        authorizationService.require(Role.HEADTEACHER, courseClass.getCompany().getId());
+
         CourseClass newCourseClass = courseClassRepository.findById(newClassId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Turma destino não encontrada"
                 ));
-
-        if (!loggedUser.getId().equals(courseClass.getCompany().getPrincipalTeacher().getId())) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN,
-                    "Somente coordenador pode fazer essa alteração"
-            );
-        }
 
         CourseClassStudent enrollment = repository
                 .findByCourseClassIdAndStudentId(classId, studentId)

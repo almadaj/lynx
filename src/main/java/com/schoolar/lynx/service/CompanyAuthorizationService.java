@@ -30,6 +30,16 @@ public class CompanyAuthorizationService {
                 .getRole();
     }
 
+    public Role getUserRole(UUID userId, UUID companyId) {
+        return userCompanyRepository
+                .findByUserIdAndCompanyId(userId, companyId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.FORBIDDEN,
+                        "Usuário não pertence à empresa."
+                ))
+                .getRole();
+    }
+
     public void require(Role minimumRole, UUID companyId) {
         Role current = getRole(companyId);
 
