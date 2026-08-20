@@ -21,5 +21,4 @@ public class UserResponseDTO {
     private String profilePhoto;
     private boolean isActive;
     private List<UserCompanyResponse> companies;
-    private boolean isAdmin;
 }

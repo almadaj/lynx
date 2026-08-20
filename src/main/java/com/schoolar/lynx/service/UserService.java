@@ -88,9 +88,6 @@ public class UserService {
             user.setPassword(dto.getPassword());
             user.setBirth(LocalDate.from(dto.getBirth().atStartOfDay()));
         }
-        if (sessionUser.isAdmin()) {
-            user.setAdmin(dto.isAdmin());
-        }
 
         var savedUser = repository.save(user);
         return MapperUtil.parseObject(savedUser, UserResponseDTO.class);
