@@ -171,24 +171,24 @@ public class CourseClassService {
     }
 
     //TODO: refact
-    public List<CourseClassResponseDTO> findMyCourseClasses() {
-
-        User loggedUser = authenticatedUserService.get();
-        List<CourseClass> classes;
-
-
-        if (!loggedUser.isAdmin()) {
-            classes = courseRepository
-                    .findClassesByStudentId(loggedUser.getId());
-        } else {
-            classes = courseRepository
-                    .findByTeacherIdWithStudents(loggedUser.getId());
-        }
-
-        return classes.stream()
-                .map(CourseClassMapper::toDTO)
-                .toList();
-    }
+//    public List<CourseClassResponseDTO> findMyCourseClasses() {
+//
+//        User loggedUser = authenticatedUserService.get();
+//        List<CourseClass> classes;
+//
+//
+//        if (!loggedUser.isAdmin()) {
+//            classes = courseRepository
+//                    .findClassesByStudentId(loggedUser.getId());
+//        } else {
+//            classes = courseRepository
+//                    .findByTeacherIdWithStudents(loggedUser.getId());
+//        }
+//
+//        return classes.stream()
+//                .map(CourseClassMapper::toDTO)
+//                .toList();
+//    }
 
     public List<CourseClassResponseDTO> findCoursesByCompany(UUID companyId){
         User loggedUser = authenticatedUserService.get();
