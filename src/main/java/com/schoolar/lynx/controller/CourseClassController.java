@@ -38,11 +38,11 @@ public class CourseClassController {
     public void deleteById(@PathVariable UUID id){
         service.deleteById(id);
     }
-//TODO: função será refatorada
-//    @GetMapping("/me")
-//    public List<CourseClassResponseDTO> getMyClassCourses(){
-//       return service.findMyCourseClasses();
-//    }
+
+    @GetMapping("/my")
+    public List<CourseClassResponseDTO> getMyClassCourses(){
+       return service.findMyCourseClasses();
+    }
 
     @GetMapping("/company/{companyId}")
     public List<CourseClassResponseDTO> getCoursesByCompanyId(@PathVariable UUID companyId){

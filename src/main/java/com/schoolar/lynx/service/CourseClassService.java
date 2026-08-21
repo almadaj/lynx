@@ -1,9 +1,6 @@
 package com.schoolar.lynx.service;
 
-import com.schoolar.lynx.domain.dto.CourseClassCreateDTO;
-import com.schoolar.lynx.domain.dto.CourseClassResponseDTO;
-import com.schoolar.lynx.domain.dto.CourseClassUpdateDTO;
-import com.schoolar.lynx.domain.dto.StudentSummaryDTO;
+import com.schoolar.lynx.domain.dto.*;
 import com.schoolar.lynx.domain.enums.Role;
 import com.schoolar.lynx.domain.mapper.CourseClassMapper;
 import com.schoolar.lynx.domain.model.Company;
@@ -21,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -32,6 +30,7 @@ public class CourseClassService {
     private final CompanyRepository companyRepository;
     private final AuthenticatedUserService authenticatedUserService;
     private final CompanyAuthorizationService authorizationService;
+    private final UserCompanyService userCompanyService;
 
     public CourseClassResponseDTO create (CourseClassCreateDTO dto){
         CourseClass finalDto = new CourseClass();
@@ -171,37 +170,48 @@ public class CourseClassService {
     }
 
     //TODO: refact
-//    public List<CourseClassResponseDTO> findMyCourseClasses() {
-//
-//        User loggedUser = authenticatedUserService.get();
-//        List<CourseClass> classes;
-//
-//
-//        if (!loggedUser.isAdmin()) {
-//            classes = courseRepository
-//                    .findClassesByStudentId(loggedUser.getId());
-//        } else {
-//            classes = courseRepository
-//                    .findByTeacherIdWithStudents(loggedUser.getId());
-//        }
-//
-//        return classes.stream()
-//                .map(CourseClassMapper::toDTO)
-//                .toList();
-//    }
-
-    public List<CourseClassResponseDTO> findCoursesByCompany(UUID companyId){
+    public List<CourseClassResponseDTO> findMyCourseClasses() {
         User loggedUser = authenticatedUserService.get();
-        if (loggedUser == null) {
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED
-            );
+
+        List<UserCompanyResponse> companies =
+                userCompanyService.getMyCompaniesAndRoles();
+
+        List<CourseClass> classes = new ArrayList<>();
+
+        for (UserCompanyResponse company : companies) {
+            switch (company.getRole()) {
+                case Role.STUDENT -> classes.addAll(
+                        courseRepository.findClassesByStudentId(
+                                loggedUser.getId()
+                        )
+                );
+
+                case Role.TEACHER -> classes.addAll(
+                        courseRepository.findByTeacherIdAndCompanyId(
+                                loggedUser.getId(),
+                                company.getCompanyId()
+                        )
+                );
+
+                case Role.HEADTEACHER, Role.ADMIN, Role.PRINCIPAL -> classes.addAll(
+                        courseRepository.findByCompanyIdWithStudents(
+                                company.getCompanyId()
+                        )
+                );
+            }
         }
 
+        return classes.stream()
+                .distinct()
+                .map(CourseClassMapper::toDTO)
+                .toList();
+    }
+
+    public List<CourseClassResponseDTO> findCoursesByCompany(UUID companyId){
+        authorizationService.require(Role.TEACHER, companyId);
+
         List<CourseClass> classes;
-
         classes = courseRepository.findByCompanyIdWithStudents(companyId);
-
         return classes.stream()
                 .map(CourseClassMapper::toDTO)
                 .toList();
