@@ -45,4 +45,6 @@ public interface CourseClassRepository extends JpaRepository<CourseClass, UUID> 
     WHERE c.company.id = :companyId
     """)
     List<CourseClass> findByCompanyIdWithStudents(UUID companyId);
+
+    List<CourseClass> findByTeacherIdAndCompanyId(UUID teacherId, UUID companyId);
 }

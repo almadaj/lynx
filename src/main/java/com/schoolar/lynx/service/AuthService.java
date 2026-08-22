@@ -45,7 +45,6 @@ public class AuthService {
                 .email(dto.getEmail())
                 .birth(dto.getBirth())
                 .password(passwordEncoder.encode(dto.getPassword()))
-                .isAdmin(false)
                 .isActive(true)
                 .build();
 

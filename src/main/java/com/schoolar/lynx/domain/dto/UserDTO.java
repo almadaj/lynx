@@ -16,5 +16,4 @@ public class UserDTO {
     private LocalDate birth;
     private String profilePhoto;
     private boolean isActive;
-    private boolean isAdmin;
 }

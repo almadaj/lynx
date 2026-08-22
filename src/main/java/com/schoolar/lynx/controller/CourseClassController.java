@@ -39,7 +39,7 @@ public class CourseClassController {
         service.deleteById(id);
     }
 
-    @GetMapping("/me")
+    @GetMapping("/my")
     public List<CourseClassResponseDTO> getMyClassCourses(){
        return service.findMyCourseClasses();
     }

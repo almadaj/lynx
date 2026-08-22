@@ -1,16 +1,13 @@
 package com.schoolar.lynx.service;
 
-import com.schoolar.lynx.domain.dto.CourseClassCreateDTO;
-import com.schoolar.lynx.domain.dto.CourseClassResponseDTO;
-import com.schoolar.lynx.domain.dto.CourseClassUpdateDTO;
-import com.schoolar.lynx.domain.dto.StudentSummaryDTO;
+import com.schoolar.lynx.domain.dto.*;
+import com.schoolar.lynx.domain.enums.Role;
 import com.schoolar.lynx.domain.mapper.CourseClassMapper;
 import com.schoolar.lynx.domain.model.Company;
 import com.schoolar.lynx.domain.model.CourseClass;
 import com.schoolar.lynx.domain.model.User;
 import com.schoolar.lynx.repository.CompanyRepository;
 import com.schoolar.lynx.repository.CourseClassRepository;
-import com.schoolar.lynx.repository.CourseClassStudentRepository;
 import com.schoolar.lynx.repository.UserRepository;
 import com.schoolar.lynx.security.AuthenticatedUserService;
 import com.schoolar.lynx.utils.MapperUtil;
@@ -21,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -31,16 +29,18 @@ public class CourseClassService {
     private final UserRepository userRepository;
     private final CompanyRepository companyRepository;
     private final AuthenticatedUserService authenticatedUserService;
+    private final CompanyAuthorizationService authorizationService;
+    private final UserCompanyService userCompanyService;
 
     public CourseClassResponseDTO create (CourseClassCreateDTO dto){
         CourseClass finalDto = new CourseClass();
-        User loggedUser = authenticatedUserService.get();
-
         Company company = companyRepository.findById(dto.getCompanyId())
             .orElseThrow(() -> new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
                     "Empresa não encontrada"
             ));
+
+        authorizationService.require(Role.HEADTEACHER, company.getId());
 
         User teacher = userRepository.findById(dto.getTeacherId())
             .orElseThrow(() -> new ResponseStatusException(
@@ -48,25 +48,8 @@ public class CourseClassService {
                     "Professor não encontrado"
             ));
 
-        if (!teacher.isAdmin()){
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN,
-                    "Estudantes não podem gerenciar turmas"
-            );
-        }
-
-        if (!loggedUser.isAdmin()) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN,
-                    "Estudantes não podem criar turmas"
-            );
-        }
-
-        if (!company.getPrincipalTeacher().getId().equals(loggedUser.getId())) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN,
-                    "Apenas o diretor pode alterar esta turma"
-            );
+        if (authorizationService.getUserRole(teacher.getId(), dto.getCompanyId()).equals(Role.STUDENT)){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Usuário sem autorização");
         }
 
         finalDto.setName(dto.getName());
@@ -123,12 +106,6 @@ public class CourseClassService {
 
     @Transactional
     public CourseClassResponseDTO update(UUID id, CourseClassUpdateDTO dto){
-        User loggedUser = authenticatedUserService.get();
-
-        if (!loggedUser.isAdmin()) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
-
         CourseClass course = courseRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
@@ -136,13 +113,7 @@ public class CourseClassService {
                 ));
 
         Company company = course.getCompany();
-
-        if (!loggedUser.getId().equals(company.getPrincipalTeacher().getId())){
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN,
-                    "Somente diretor pode fazer alterações"
-            );
-        }
+        authorizationService.require(Role.HEADTEACHER, company.getId());
 
         if (dto.getTeacherId() != null) {
             User teacher = userRepository.findById(dto.getTeacherId())
@@ -151,11 +122,8 @@ public class CourseClassService {
                             "Professor não encontrado"
                     ));
 
-            if (!teacher.isAdmin()){
-                throw new ResponseStatusException(
-                        HttpStatus.FORBIDDEN,
-                        "Estudantes não podem gerenciar turmas"
-                );
+            if (authorizationService.getUserRole(teacher.getId(), company.getId()).equals(Role.STUDENT)){
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Usuário sem autorização");
             }
 
             course.setTeacher(teacher);
@@ -190,14 +158,6 @@ public class CourseClassService {
 
     @Transactional
     public void deleteById(UUID id){
-        User loggedUser = authenticatedUserService.get();
-
-        if (loggedUser == null) {
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED
-            );
-        }
-
         CourseClass course = courseRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
@@ -205,72 +165,53 @@ public class CourseClassService {
                 ));
 
         Company company = course.getCompany();
-        if (!loggedUser.getId().equals(company.getPrincipalTeacher().getId())){
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN,
-                    "Somente diretor pode fazer alterações"
-            );
-        }
+        authorizationService.require(Role.HEADTEACHER, company.getId());
         courseRepository.deleteById(id);
     }
 
+    //TODO: refact
     public List<CourseClassResponseDTO> findMyCourseClasses() {
-
         User loggedUser = authenticatedUserService.get();
-        List<CourseClass> classes;
 
+        List<UserCompanyResponse> companies =
+                userCompanyService.getMyCompaniesAndRoles();
 
-        if (!loggedUser.isAdmin()) {
-            classes = courseRepository
-                    .findClassesByStudentId(loggedUser.getId());
-        } else {
-            classes = courseRepository
-                    .findByTeacherIdWithStudents(loggedUser.getId());
+        List<CourseClass> classes = new ArrayList<>();
+
+        for (UserCompanyResponse company : companies) {
+            switch (company.getRole()) {
+                case Role.STUDENT -> classes.addAll(
+                        courseRepository.findClassesByStudentId(
+                                loggedUser.getId()
+                        )
+                );
+
+                case Role.TEACHER -> classes.addAll(
+                        courseRepository.findByTeacherIdAndCompanyId(
+                                loggedUser.getId(),
+                                company.getCompanyId()
+                        )
+                );
+
+                case Role.HEADTEACHER, Role.ADMIN, Role.PRINCIPAL -> classes.addAll(
+                        courseRepository.findByCompanyIdWithStudents(
+                                company.getCompanyId()
+                        )
+                );
+            }
         }
 
         return classes.stream()
-                .map(CourseClassMapper::toDTO)
-                .toList();
-    }
-
-    public List<CourseClassResponseDTO> findAllCourseClasses(){
-        User loggedUser = authenticatedUserService.get();
-        List<CourseClass> classes;
-        boolean isPrincipal =
-            companyRepository.findByPrincipalTeacherId(loggedUser.getId()).isPresent();
-
-        if (loggedUser.isAdmin() && isPrincipal){
-            Company company = companyRepository
-                .findByPrincipalTeacherId(loggedUser.getId())
-                .get();
-
-            classes = courseRepository
-                .findByCompanyIdWithStudents(company.getId());
-
-        } else {
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "Somente Diretor pode ter acesso a lista de turmas"
-            );
-        }
-        return classes.stream()
+                .distinct()
                 .map(CourseClassMapper::toDTO)
                 .toList();
     }
 
     public List<CourseClassResponseDTO> findCoursesByCompany(UUID companyId){
-        User loggedUser = authenticatedUserService.get();
-
-        if (loggedUser == null) {
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED
-            );
-        }
+        authorizationService.require(Role.TEACHER, companyId);
 
         List<CourseClass> classes;
-
         classes = courseRepository.findByCompanyIdWithStudents(companyId);
-
         return classes.stream()
                 .map(CourseClassMapper::toDTO)
                 .toList();

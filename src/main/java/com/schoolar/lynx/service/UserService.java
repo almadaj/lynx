@@ -79,10 +79,6 @@ public class UserService {
         var session = repository.findById(sessionUser.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário de sessão não encontrado"));
 
-        //TODO: remover esse bloco
-        if (!sessionUser.isAdmin() && Boolean.TRUE.equals(dto.isAdmin())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Você não tem permissão para promover usuário a admin.");
-        }
         user.setName(dto.getName());
         user.setEmail(dto.getEmail());
         user.setProfilePhoto(dto.getProfilePhoto());
@@ -91,9 +87,6 @@ public class UserService {
         if (sessionUser.equals(dto)){
             user.setPassword(dto.getPassword());
             user.setBirth(LocalDate.from(dto.getBirth().atStartOfDay()));
-        }
-        if (sessionUser.isAdmin()) {
-            user.setAdmin(dto.isAdmin());
         }
 
         var savedUser = repository.save(user);
