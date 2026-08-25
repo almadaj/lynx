@@ -23,7 +23,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final UserCompanyRepository userCompanyRepository;
 
-    public LoginResponseDTO login(LoginRequestDTO dto) {
+    public String login(LoginRequestDTO dto) {
         User user = userRepository.findByEmail(dto.getEmail())
                 .orElseThrow(() -> new RuntimeException("Credenciais inválidas"));
 
@@ -31,11 +31,10 @@ public class AuthService {
             throw new RuntimeException("Credenciais inválidas");
         }
 
-        String token = jwtService.generateToken(user);
-        return new LoginResponseDTO(token);
+        return jwtService.generateToken(user);
     }
 
-    public LoginResponseDTO register(RegisterRequestDTO dto) {
+    public String register(RegisterRequestDTO dto) {
         if (userRepository.findByEmail(dto.getEmail()).isPresent()) {
             throw new RuntimeException("Email já cadastrado");
         }
@@ -50,8 +49,7 @@ public class AuthService {
 
         userRepository.save(user);
 
-        String token = jwtService.generateToken(user);
-        return new LoginResponseDTO(token);
+        return jwtService.generateToken(user);
     }
 
     public AuthUserDTO me() {
