@@ -31,6 +31,12 @@ public class AuthController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(HttpServletResponse response) {
+        clearAuthCookie(response);
+        return ResponseEntity.ok().build();
+    }
+
     @PostMapping("/register")
     public ResponseEntity<Void> register (
             @Valid @RequestBody RegisterRequestDTO dto,
@@ -53,10 +59,26 @@ public class AuthController {
         ResponseCookie cookie = ResponseCookie
                 .from("access_token", token)
                 .httpOnly(true)
-                .secure(false)
+                .secure(false) //TODO: em prod isso deve ser true
                 .sameSite("Lax")
                 .path("/")
                 .maxAge(Duration.ofHours(1))
+                .build();
+
+        response.addHeader(
+                HttpHeaders.SET_COOKIE,
+                cookie.toString()
+        );
+    }
+
+    private void clearAuthCookie(HttpServletResponse response) {
+        ResponseCookie cookie = ResponseCookie
+                .from("access_token", "")
+                .httpOnly(true)
+                .secure(false) //TODO: em prod isso deve ser true
+                .sameSite("Lax")
+                .path("/")
+                .maxAge(Duration.ZERO)
                 .build();
 
         response.addHeader(

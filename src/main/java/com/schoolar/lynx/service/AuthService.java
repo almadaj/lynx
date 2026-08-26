@@ -56,8 +56,15 @@ public class AuthService {
         Authentication authentication =
                 SecurityContextHolder.getContext().getAuthentication();
 
-        UserDetailsImpl userDetails =
-                (UserDetailsImpl) authentication.getPrincipal();
+        if (authentication == null ||
+                !authentication.isAuthenticated() ||
+                !(authentication.getPrincipal() instanceof UserDetailsImpl userDetails)) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Usuário não autenticado"
+            );
+        }
 
         User user = userRepository.findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new ResponseStatusException(
