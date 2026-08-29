@@ -20,7 +20,6 @@ import java.util.Base64;
 @Service
 @RequiredArgsConstructor
 public class RefreshTokenService {
-
     private final RefreshTokenRepository refreshTokenRepository;
 
     @Value("${security.refresh-token.expiration}")

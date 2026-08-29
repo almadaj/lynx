@@ -114,11 +114,18 @@ public class AuthService {
                 .build();
     }
 
-    public void logout(HttpServletResponse response) {
+    public void logout(HttpServletRequest request, HttpServletResponse response) {
+            String refreshToken = extractRefreshToken(request);
+            refreshTokenService.revoke(refreshToken);
+            deleteAccessTokenCookie(response);
+            deleteRefreshTokenCookie(response);
+    }
+
+    private void deleteAccessTokenCookie(HttpServletResponse response) {
         ResponseCookie cookie = ResponseCookie
                 .from("access_token", "")
                 .httpOnly(true)
-                .secure(false) //TODO: em prod isso deve ser true
+                .secure(false)
                 .sameSite("Lax")
                 .path("/")
                 .maxAge(Duration.ZERO)
@@ -129,7 +136,21 @@ public class AuthService {
                 cookie.toString()
         );
     }
+    private void deleteRefreshTokenCookie(HttpServletResponse response) {
+        ResponseCookie cookie = ResponseCookie
+                .from("refresh_token", "")
+                .httpOnly(true)
+                .secure(false)
+                .sameSite("Lax")
+                .path("/auth/refresh")
+                .maxAge(Duration.ZERO)
+                .build();
 
+        response.addHeader(
+                HttpHeaders.SET_COOKIE,
+                cookie.toString()
+        );
+    }
     private void addAccessTokenCookie(HttpServletResponse response, String token){
         ResponseCookie cookie = ResponseCookie
                 .from("access_token", token)
@@ -145,14 +166,13 @@ public class AuthService {
                 cookie.toString()
         );
     }
-
     private void addRefreshTokenCookie(HttpServletResponse response, String token) {
         ResponseCookie cookie = ResponseCookie
                 .from("refresh_token", token)
                 .httpOnly(true)
                 .secure(false) //TODO: em prod isso deve ser true
                 .sameSite("Lax")
-                .path("/")
+                .path("/auth/refresh")
                 .maxAge(Duration.ofDays(7))
                 .build();
 
@@ -161,24 +181,15 @@ public class AuthService {
                 cookie.toString()
         );
     }
-
     private String extractRefreshToken(HttpServletRequest request) {
-        System.out.println("========== REFRESH ==========");
         if (request.getCookies() != null) {
-
             for (Cookie cookie : request.getCookies()) {
-                System.out.println(
-                        "Cookie: " +
-                                cookie.getName()
-                );
-
                 if ("refresh_token".equals(cookie.getName())) {
                     return cookie.getValue();
                 }
             }
         }
 
-        System.out.println("❌ refresh_token NÃO encontrado");
         throw new ResponseStatusException(
                 HttpStatus.UNAUTHORIZED,
                 "Refresh token não encontrado"
