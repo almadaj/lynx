@@ -4,6 +4,7 @@ import com.schoolar.lynx.domain.dto.AuthUserDTO;
 import com.schoolar.lynx.domain.dto.LoginRequestDTO;
 import com.schoolar.lynx.domain.dto.RegisterRequestDTO;
 import com.schoolar.lynx.service.AuthService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,14 +27,19 @@ public class AuthController {
             @RequestBody LoginRequestDTO dto,
             HttpServletResponse response
     ) {
-        String token = authService.login(dto);
-        addAuthCookie(response, token);
+        authService.login(dto, response);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<Void> refresh(HttpServletRequest request, HttpServletResponse response){
+        authService.refresh(request, response);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(HttpServletResponse response) {
-        clearAuthCookie(response);
+        authService.logout(response);
         return ResponseEntity.ok().build();
     }
 
@@ -43,7 +49,7 @@ public class AuthController {
             HttpServletResponse response
             ){
         String token = authService.register(dto);
-        addAuthCookie(response, token);
+        addAuthCookie(response, token); //TODO: refact, remover
         return ResponseEntity.ok().build();
     }
 
@@ -63,22 +69,6 @@ public class AuthController {
                 .sameSite("Lax")
                 .path("/")
                 .maxAge(Duration.ofHours(1))
-                .build();
-
-        response.addHeader(
-                HttpHeaders.SET_COOKIE,
-                cookie.toString()
-        );
-    }
-
-    private void clearAuthCookie(HttpServletResponse response) {
-        ResponseCookie cookie = ResponseCookie
-                .from("access_token", "")
-                .httpOnly(true)
-                .secure(false) //TODO: em prod isso deve ser true
-                .sameSite("Lax")
-                .path("/")
-                .maxAge(Duration.ZERO)
                 .build();
 
         response.addHeader(
