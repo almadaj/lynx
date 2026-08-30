@@ -4,6 +4,7 @@ import com.schoolar.lynx.service.JwtService;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -30,25 +31,19 @@ public class JwtFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
-
         try {
-            String authHeader = request.getHeader("Authorization");
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            String token = extractToken(request);
+            if (token == null) {
                 filterChain.doFilter(request, response);
                 return;
             }
 
-            String token = authHeader.substring(7);
             String username = jwtService.extractUsername(token);
-
             if (username != null &&
                     SecurityContextHolder.getContext().getAuthentication() == null) {
-
                 UserDetails userDetails =
                         userDetailsService.loadUserByUsername(username);
-
                 if (jwtService.isTokenValid(token, userDetails)) {
-
                     UsernamePasswordAuthenticationToken authToken =
                             new UsernamePasswordAuthenticationToken(
                                     userDetails,
@@ -70,7 +65,24 @@ public class JwtFilter extends OncePerRequestFilter {
         } catch (JwtException | IllegalArgumentException e) {
             SecurityContextHolder.clearContext();
         }
+
         filterChain.doFilter(request, response);
     }
-}
 
+    private String extractToken(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7);
+        }
+
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("access_token".equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+        return null;
+    }
+}
