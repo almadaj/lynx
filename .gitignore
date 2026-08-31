@@ -32,3 +32,6 @@ build/
 ### VS Code ###
 .vscode/
 .env
+
+backup_dev.sql
+schema_dev.sql
