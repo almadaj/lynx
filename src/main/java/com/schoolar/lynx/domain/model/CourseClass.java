@@ -42,6 +42,7 @@ public class CourseClass {
 
     @Min(1)
     @Max(100)
+    @Column(nullable = false)
     private Integer maxStudents;
 
     @ManyToOne(fetch = FetchType.LAZY)
