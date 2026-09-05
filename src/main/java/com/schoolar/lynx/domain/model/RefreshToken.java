@@ -13,7 +13,7 @@ import java.util.UUID;
 @EqualsAndHashCode
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "refresh_token")
+@Table(name = "refresh_token", schema = "seguranca")
 @Builder
 public class RefreshToken {
     @Id

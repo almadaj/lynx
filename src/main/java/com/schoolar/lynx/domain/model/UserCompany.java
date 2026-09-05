@@ -14,6 +14,7 @@ import java.util.UUID;
 @Setter
 @Table(
         name = "user_company",
+        schema = "seguranca",
         uniqueConstraints = {
                 @UniqueConstraint(columnNames = {"user_id", "company_id"})
         })

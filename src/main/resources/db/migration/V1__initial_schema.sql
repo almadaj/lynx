@@ -3,15 +3,19 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 -- =====================================================
 -- USERS
 -- =====================================================
+CREATE SCHEMA seguranca;
+CREATE SCHEMA organizacao;
+CREATE SCHEMA academico;
+CREATE SCHEMA configuracao;
 
-CREATE TABLE users (
+CREATE TABLE seguranca.users (
     id UUID NOT NULL,
     name VARCHAR(150) NOT NULL,
     email VARCHAR(255) NOT NULL,
     password VARCHAR(255) NOT NULL,
     birth DATE,
     profile_photo VARCHAR(255),
-    is_admin BOOLEAN NOT NULL,
+    is_teacher BOOLEAN NOT NULL,
     is_active BOOLEAN NOT NULL,
 
     CONSTRAINT pk_users PRIMARY KEY (id),
@@ -22,7 +26,7 @@ CREATE TABLE users (
 -- COMPANY
 -- =====================================================
 
-CREATE TABLE company (
+CREATE TABLE organizacao.company (
     id UUID NOT NULL,
     public_name VARCHAR(150) NOT NULL,
     company_name VARCHAR(400) NOT NULL,
@@ -40,14 +44,14 @@ CREATE TABLE company (
 
     CONSTRAINT fk_company_principal_teacher
         FOREIGN KEY (principal_teacher_id)
-        REFERENCES users(id)
+        REFERENCES seguranca.users(id)
 );
 
 -- =====================================================
 -- SOCIAL NETWORK
 -- =====================================================
 
-CREATE TABLE social_network (
+CREATE TABLE configuracao.social_network (
     id UUID NOT NULL,
     name VARCHAR(255) NOT NULL,
     icon VARCHAR(255) NOT NULL,
@@ -60,7 +64,7 @@ CREATE TABLE social_network (
 -- USER COMPANY
 -- =====================================================
 
-CREATE TABLE user_company (
+CREATE TABLE seguranca.user_company (
     id UUID NOT NULL,
     company_id UUID NOT NULL,
     user_id UUID NOT NULL,
@@ -86,18 +90,18 @@ CREATE TABLE user_company (
 
     CONSTRAINT fk_user_company_user
         FOREIGN KEY (user_id)
-        REFERENCES users(id),
+        REFERENCES seguranca.users(id),
 
     CONSTRAINT fk_user_company_company
         FOREIGN KEY (company_id)
-        REFERENCES company(id)
+        REFERENCES organizacao.company(id)
 );
 
 -- =====================================================
 -- COURSE CLASS
 -- =====================================================
 
-CREATE TABLE course_class (
+CREATE TABLE academico.course_class (
     id UUID NOT NULL,
     name VARCHAR(200),
     level VARCHAR(255) NOT NULL,
@@ -138,18 +142,18 @@ CREATE TABLE course_class (
 
     CONSTRAINT fk_course_class_teacher
         FOREIGN KEY (teacher_id)
-        REFERENCES users(id),
+        REFERENCES seguranca.users(id),
 
     CONSTRAINT fk_course_class_company
         FOREIGN KEY (company_id)
-        REFERENCES company(id)
+        REFERENCES organizacao.company(id)
 );
 
 -- =====================================================
 -- COURSE CLASS STUDENT
 -- =====================================================
 
-CREATE TABLE course_class_student (
+CREATE TABLE academico.course_class_student (
     id UUID NOT NULL,
     course_class_id UUID,
     student_id UUID,
@@ -159,9 +163,9 @@ CREATE TABLE course_class_student (
 
     CONSTRAINT fk_course_class_student_class
         FOREIGN KEY (course_class_id)
-        REFERENCES course_class(id),
+        REFERENCES academico.course_class(id),
 
     CONSTRAINT fk_course_class_student_student
         FOREIGN KEY (student_id)
-        REFERENCES users(id)
+        REFERENCES seguranca.users(id)
 );

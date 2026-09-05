@@ -14,7 +14,7 @@ import java.util.UUID;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "grade")
+@Table(name = "grade", schema = "academico")
 @Builder
 public class Grade {
     @Id

@@ -16,7 +16,7 @@ import java.util.UUID;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "imported_file")
+@Table(name = "imported_file", schema = "configuracao")
 @Builder
 public class ImportedFile {
     @Id

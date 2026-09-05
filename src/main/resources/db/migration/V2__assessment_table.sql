@@ -2,7 +2,7 @@
 -- ASSESSMENT
 -- =====================================================
 
-CREATE TABLE assessment (
+CREATE TABLE academico.assessment (
     id UUID NOT NULL,
     title VARCHAR(50) NOT NULL,
     max_score DOUBLE PRECISION,
@@ -14,14 +14,14 @@ CREATE TABLE assessment (
 
     CONSTRAINT fk_assessment_course_class
         FOREIGN KEY (course_class_id)
-        REFERENCES course_class(id)
+        REFERENCES academico.course_class(id)
 );
 
 -- =====================================================
 -- GRADE
 -- =====================================================
 
-CREATE TABLE grade (
+CREATE TABLE academico.grade (
     id UUID NOT NULL,
     user_id UUID NOT NULL,
     assessment_id UUID NOT NULL,
@@ -32,18 +32,18 @@ CREATE TABLE grade (
 
     CONSTRAINT fk_grade_user
         FOREIGN KEY (user_id)
-        REFERENCES users(id),
+        REFERENCES seguranca.users(id),
 
     CONSTRAINT fk_grade_assessment
         FOREIGN KEY (assessment_id)
-        REFERENCES assessment(id)
+        REFERENCES academico.assessment(id)
 );
 
 -- =====================================================
 -- QUESTION
 -- =====================================================
 
-CREATE TABLE question (
+CREATE TABLE academico.question (
     id UUID NOT NULL,
     author_id UUID NOT NULL,
     company_id UUID NOT NULL,
@@ -99,18 +99,18 @@ CREATE TABLE question (
 
     CONSTRAINT fk_question_author
         FOREIGN KEY (author_id)
-        REFERENCES users(id),
+        REFERENCES seguranca.users(id),
 
     CONSTRAINT fk_question_company
         FOREIGN KEY (company_id)
-        REFERENCES company(id)
+        REFERENCES organizacao.company(id)
 );
 
 -- =====================================================
 -- COMPANY SOCIAL NETWORK
 -- =====================================================
 
-CREATE TABLE company_social_network (
+CREATE TABLE configuracao.company_social_network (
     id UUID NOT NULL,
     company_id UUID NOT NULL,
     social_network_id UUID NOT NULL,
@@ -120,18 +120,18 @@ CREATE TABLE company_social_network (
 
     CONSTRAINT fk_company_social_network_company
         FOREIGN KEY (company_id)
-        REFERENCES company(id),
+        REFERENCES organizacao.company(id),
 
     CONSTRAINT fk_company_social_network_social_network
         FOREIGN KEY (social_network_id)
-        REFERENCES social_network(id)
+        REFERENCES configuracao.social_network(id)
 );
 
 -- =====================================================
 -- IMPORTED FILE
 -- =====================================================
 
-CREATE TABLE imported_file (
+CREATE TABLE configuracao.imported_file (
     id UUID NOT NULL,
     filename VARCHAR(255),
     status VARCHAR(255) NOT NULL,
@@ -155,7 +155,7 @@ CREATE TABLE imported_file (
 -- REFRESH TOKEN
 -- =====================================================
 
-CREATE TABLE refresh_token (
+CREATE TABLE seguranca.refresh_token (
     id UUID NOT NULL,
     user_id UUID NOT NULL,
     token_hash VARCHAR(255) NOT NULL,
@@ -168,14 +168,14 @@ CREATE TABLE refresh_token (
 
     CONSTRAINT fk_refresh_token_user
         FOREIGN KEY (user_id)
-        REFERENCES users(id)
+        REFERENCES seguranca.users(id)
 );
 
 -- =====================================================
 -- SEED - SOCIAL NETWORK
 -- =====================================================
 
-INSERT INTO social_network (id, name, icon)
+INSERT INTO configuracao.social_network (id, name, icon)
 VALUES
     ('4b5a47f5-a815-4a1f-81c0-f57f6e3ef103', 'Instagram', 'brand-instagram'),
     ('e8519c5f-8851-4106-a4fd-47d2d911e360', 'Facebook', 'brand-facebook'),

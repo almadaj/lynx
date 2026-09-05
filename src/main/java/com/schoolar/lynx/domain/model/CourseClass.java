@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "course_class")
+@Table(name = "course_class", schema = "academico")
 @Getter
 @Setter
 @AllArgsConstructor
