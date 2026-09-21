@@ -35,3 +35,4 @@ build/
 
 backup_dev.sql
 schema_dev.sql
+src/main/resources/db/seed/seed.sql

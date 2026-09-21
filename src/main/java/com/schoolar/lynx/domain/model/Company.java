@@ -14,7 +14,7 @@ import java.util.UUID;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "company")
+@Table(name = "company", schema = "organizacao")
 @Builder
 public class Company {
     @Id

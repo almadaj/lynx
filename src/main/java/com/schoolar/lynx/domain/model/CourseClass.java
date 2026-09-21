@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "course_class")
+@Table(name = "course_class", schema = "academico")
 @Getter
 @Setter
 @AllArgsConstructor
@@ -42,6 +42,7 @@ public class CourseClass {
 
     @Min(1)
     @Max(100)
+    @Column(nullable = false)
     private Integer maxStudents;
 
     @ManyToOne(fetch = FetchType.LAZY)

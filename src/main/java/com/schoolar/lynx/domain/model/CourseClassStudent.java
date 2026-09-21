@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "course_class_student")
+@Table(name = "course_class_student", schema = "academico")
 @Getter
 @Setter
 public class CourseClassStudent {

@@ -12,7 +12,7 @@ import java.util.UUID;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "social_network")
+@Table(name = "social_network", schema = "configuracao")
 @Builder
 public class SocialNetwork {
     @Id

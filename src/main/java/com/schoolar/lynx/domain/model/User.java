@@ -14,7 +14,7 @@ import java.util.UUID;
 @EqualsAndHashCode
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "users")
+@Table(name = "users", schema = "seguranca")
 @Builder
 public class User {
     @Id
@@ -38,8 +38,8 @@ public class User {
     @Column(name = "profile_photo")
     private String profilePhoto;
 
-    @Column(name = "is_admin", nullable = false)
-    private boolean isAdmin;
+    @Column(name = "is_teacher", nullable = false)
+    private boolean isTeacher;
 
     @Column(name = "is_active", nullable = false)
     private boolean isActive;
