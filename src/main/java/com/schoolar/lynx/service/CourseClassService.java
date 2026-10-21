@@ -6,6 +6,8 @@ import com.schoolar.lynx.domain.mapper.CourseClassMapper;
 import com.schoolar.lynx.domain.model.Company;
 import com.schoolar.lynx.domain.model.CourseClass;
 import com.schoolar.lynx.domain.model.User;
+import com.schoolar.lynx.events.ClassCreated.ClassCreatedEvent;
+import com.schoolar.lynx.events.ClassCreated.ClassCreatedProducer;
 import com.schoolar.lynx.repository.CompanyRepository;
 import com.schoolar.lynx.repository.CourseClassRepository;
 import com.schoolar.lynx.repository.UserRepository;
@@ -31,6 +33,7 @@ public class CourseClassService {
     private final AuthenticatedUserService authenticatedUserService;
     private final CompanyAuthorizationService authorizationService;
     private final UserCompanyService userCompanyService;
+    private final ClassCreatedProducer classCreatedProducer;
 
     public CourseClassResponseDTO create (CourseClassCreateDTO dto){
         CourseClass finalDto = new CourseClass();
@@ -61,7 +64,14 @@ public class CourseClassService {
         finalDto.setStartDate(dto.getStartDate());
         finalDto.setStartDate(dto.getStartDate());
 
-        courseRepository.save(finalDto);
+        CourseClass savedClass = courseRepository.save(finalDto);
+        classCreatedProducer.publish(
+                new ClassCreatedEvent(
+                        savedClass.getId(),
+                        savedClass.getName(),
+                        savedClass.getCompany().getId()
+                )
+        );
         return MapperUtil.parseObject(finalDto, CourseClassResponseDTO.class);
     }
 
