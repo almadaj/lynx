@@ -1,6 +1,7 @@
 package com.schoolar.lynx.events.ClassCreated;
 
 import com.schoolar.lynx.config.RabbitMQConfig;
+import com.schoolar.lynx.events.Notification.NotificationService;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
@@ -16,7 +17,6 @@ public class ClassCreatedConsumer {
     @RabbitListener(queues = RabbitMQConfig.STUDY_QUEUE)
     public void consume(String message) {
         System.out.println("Evento recebido: " + message);
-
-        notificationService.notifyClassCreated(message);
+        notificationService.notify("class-created", message);
     }
 }
