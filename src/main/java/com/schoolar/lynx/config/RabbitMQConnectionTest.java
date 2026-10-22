@@ -16,7 +16,6 @@ public class RabbitMQConnectionTest implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        System.out.println("AmqpAdmin: " + amqpAdmin.getClass().getName());
         System.out.println("Filas declaradas: " + amqpAdmin.getQueueProperties("lynx.study.queue"));
     }
 }

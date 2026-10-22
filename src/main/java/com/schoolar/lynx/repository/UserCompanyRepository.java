@@ -13,6 +13,6 @@ public interface UserCompanyRepository extends JpaRepository<UserCompany, UUID> 
     List<UserCompany> findAllByUserId(UUID userId);
     Optional<UserCompany> findByUserIdAndCompanyId(UUID userId, UUID companyId);
     boolean existsByCompanyIdAndUserId(UUID companyId, UUID userId);
-    List<UserCompany> findAllByCompanyIdAndRoleIn(UUID companyId, Collection<Role> roles);
+    List<UserCompany> findAllByCompanyIdAndActiveTrueAndRoleIn(UUID companyId, Collection<Role> roles);
     Optional<UserCompany> findByIdAndCompanyId(UUID userCompanyId, UUID companyId);
 }
