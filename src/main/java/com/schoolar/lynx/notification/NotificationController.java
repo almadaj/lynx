@@ -1,10 +1,15 @@
-package com.schoolar.lynx.events.Notification;
+package com.schoolar.lynx.notification;
 
+import com.schoolar.lynx.domain.dto.CompanyResponseDTO;
+import com.schoolar.lynx.domain.dto.NotificationResponse;
+import com.schoolar.lynx.domain.dto.RegisterCompanyDTO;
+import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/notifications")
@@ -22,5 +27,10 @@ public class NotificationController {
     )
     public SseEmitter stream() {
         return notificationService.subscribe();
+    }
+
+    @GetMapping
+    public ResponseEntity<List<NotificationResponse>> getMyNotifications(){
+        return ResponseEntity.ok(notificationService.findMyNotifications());
     }
 }

@@ -1,5 +1,6 @@
-package com.schoolar.lynx.events.ClassCreated;
+package com.schoolar.lynx.notification.producer;
 
+import com.schoolar.lynx.events.classes.ClassCreatedEvent;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.core.JacksonException;
 import com.schoolar.lynx.config.RabbitMQConfig;
