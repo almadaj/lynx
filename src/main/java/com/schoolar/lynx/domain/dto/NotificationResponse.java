@@ -10,5 +10,5 @@ public record NotificationResponse(
         String message,
         EventType type,
         LocalDateTime createdAt,
-        boolean read
+        LocalDateTime readAt
 ) {}

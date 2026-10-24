@@ -76,7 +76,7 @@ public class NotificationService {
                             notification.getMessage(),
                             notification.getType(),
                             notification.getCreatedAt(),
-                            notificationUser.getReadAt() != null
+                            notificationUser.getReadAt()
                     );
                 })
                 .toList();

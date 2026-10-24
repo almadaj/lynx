@@ -59,7 +59,7 @@ public class ClassCreatedHandler {
                 .message("A turma " + event.name() + " foi criada.")
                 .build();
 
-        notificationRepository.save(notification);
+        Notification savedNotification = notificationRepository.saveAndFlush(notification);
 
         List<UserCompany> recipients =
                 userCompanyRepository
@@ -70,7 +70,7 @@ public class ClassCreatedHandler {
 
         List<NotificationUser> deliveries = recipients.stream()
                 .map(recipient -> NotificationUser.builder()
-                        .notification(notification)
+                        .notification(savedNotification)
                         .user(recipient.getUser())
                         .build())
                 .toList();
@@ -86,7 +86,7 @@ public class ClassCreatedHandler {
                             notification.getMessage(),
                             notification.getType(),
                             notification.getCreatedAt(),
-                            false
+                            delivery.getReadAt()
                     );
 
             eventPublisher.publishEvent(
