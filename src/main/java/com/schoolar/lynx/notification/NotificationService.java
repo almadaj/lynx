@@ -1,18 +1,24 @@
 package com.schoolar.lynx.notification;
 
 import com.schoolar.lynx.domain.dto.NotificationResponse;
+import com.schoolar.lynx.domain.dto.UserResponseDTO;
 import com.schoolar.lynx.domain.enums.Role;
+import com.schoolar.lynx.domain.mapper.NotificationMapper;
 import com.schoolar.lynx.domain.model.*;
 import com.schoolar.lynx.repository.CompanyRepository;
 import com.schoolar.lynx.notification.repository.NotificationRepository;
 import com.schoolar.lynx.notification.repository.NotificationUserRepository;
 import com.schoolar.lynx.repository.UserCompanyRepository;
 import com.schoolar.lynx.security.AuthenticatedUserService;
+import com.schoolar.lynx.utils.MapperUtil;
+import jakarta.persistence.EntityNotFoundException;
+import lombok.AllArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -20,17 +26,18 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @Service
+@AllArgsConstructor
 public class NotificationService {
     private final NotificationUserRepository notificationUserRepository;
     private final AuthenticatedUserService authenticatedUserService;
 
-    public NotificationService(
-            NotificationUserRepository notificationUserRepository,
-            AuthenticatedUserService authenticatedUserService
-    ) {
-        this.notificationUserRepository = notificationUserRepository;
-        this.authenticatedUserService = authenticatedUserService;
-    }
+//    public NotificationService(
+//            NotificationUserRepository notificationUserRepository,
+//            AuthenticatedUserService authenticatedUserService
+//    ) {
+//        this.notificationUserRepository = notificationUserRepository;
+//        this.authenticatedUserService = authenticatedUserService;
+//    }
 
     private final Map<UUID, List<SseEmitter>> clients = new ConcurrentHashMap<>();
 
@@ -80,6 +87,33 @@ public class NotificationService {
                     );
                 })
                 .toList();
+    }
+
+    public NotificationResponse findNotificationById(UUID notificationId){
+        User loggedUser = authenticatedUserService.get();
+        UUID userId = loggedUser.getId();
+        NotificationUser delivery = notificationUserRepository
+                .findByIdAndUserId(notificationId, userId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Notificação não encontrada"
+                ));
+
+        return NotificationMapper.toDTO(delivery);
+    }
+
+    @Transactional
+    public void markAsRead(UUID notificationId) {
+        User loggedUser = authenticatedUserService.get();
+        UUID userId = loggedUser.getId();
+        NotificationUser delivery = notificationUserRepository
+                .findByIdAndUserId(notificationId, userId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Notificação não encontrada"
+                ));
+
+        if (delivery.getReadAt() == null) {
+            delivery.setReadAt(LocalDateTime.now());
+        }
     }
 
     private void removeClient(UUID userId, SseEmitter emitter) {
