@@ -1,8 +1,8 @@
-package com.schoolar.lynx.notification.consumer;
+package com.schoolar.lynx.notification.messaging.consumer;
 
 import com.schoolar.lynx.config.RabbitMQConfig;
-import com.schoolar.lynx.events.classes.ClassCreatedEvent;
-import com.schoolar.lynx.notification.handler.ClassCreatedHandler;
+import com.schoolar.lynx.domain.event.courseClass.ClassCreatedEvent;
+import com.schoolar.lynx.notification.application.handler.ClassCreatedHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.ObjectMapper;

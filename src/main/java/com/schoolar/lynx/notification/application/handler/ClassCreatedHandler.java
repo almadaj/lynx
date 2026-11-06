@@ -1,13 +1,13 @@
-package com.schoolar.lynx.notification.handler;
+package com.schoolar.lynx.notification.application.handler;
 
-import com.schoolar.lynx.domain.dto.NotificationResponse;
+import com.schoolar.lynx.notification.dto.NotificationResponse;
 import com.schoolar.lynx.domain.enums.EventType;
 import com.schoolar.lynx.domain.enums.Role;
 import com.schoolar.lynx.domain.model.Company;
 import com.schoolar.lynx.domain.model.Notification;
 import com.schoolar.lynx.domain.model.NotificationUser;
 import com.schoolar.lynx.domain.model.UserCompany;
-import com.schoolar.lynx.events.classes.ClassCreatedEvent;
+import com.schoolar.lynx.domain.event.courseClass.ClassCreatedEvent;
 import com.schoolar.lynx.notification.event.NotificationCreatedForUserEvent;
 import com.schoolar.lynx.notification.repository.NotificationRepository;
 import com.schoolar.lynx.notification.repository.NotificationUserRepository;

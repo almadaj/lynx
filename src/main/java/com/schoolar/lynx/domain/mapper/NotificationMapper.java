@@ -1,6 +1,6 @@
 package com.schoolar.lynx.domain.mapper;
 
-import com.schoolar.lynx.domain.dto.NotificationResponse;
+import com.schoolar.lynx.notification.dto.NotificationResponse;
 import com.schoolar.lynx.domain.model.Notification;
 import com.schoolar.lynx.domain.model.NotificationUser;
 

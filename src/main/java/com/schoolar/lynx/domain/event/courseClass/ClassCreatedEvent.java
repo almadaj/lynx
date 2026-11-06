@@ -1,4 +1,4 @@
-package com.schoolar.lynx.events.classes;
+package com.schoolar.lynx.domain.event.courseClass;
 
 import java.util.UUID;
 

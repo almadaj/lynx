@@ -1,7 +1,7 @@
-package com.schoolar.lynx.notification;
+package com.schoolar.lynx.notification.controller;
 
-import com.schoolar.lynx.domain.dto.NotificationResponse;
-import lombok.Builder;
+import com.schoolar.lynx.notification.dto.NotificationResponse;
+import com.schoolar.lynx.notification.application.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;

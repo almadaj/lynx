@@ -1,6 +1,6 @@
 package com.schoolar.lynx.notification.listener;
 
-import com.schoolar.lynx.notification.NotificationService;
+import com.schoolar.lynx.notification.application.service.NotificationService;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;

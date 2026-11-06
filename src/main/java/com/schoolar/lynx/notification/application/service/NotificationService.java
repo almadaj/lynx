@@ -1,16 +1,10 @@
-package com.schoolar.lynx.notification;
+package com.schoolar.lynx.notification.application.service;
 
-import com.schoolar.lynx.domain.dto.NotificationResponse;
-import com.schoolar.lynx.domain.dto.UserResponseDTO;
-import com.schoolar.lynx.domain.enums.Role;
+import com.schoolar.lynx.notification.dto.NotificationResponse;
 import com.schoolar.lynx.domain.mapper.NotificationMapper;
 import com.schoolar.lynx.domain.model.*;
-import com.schoolar.lynx.repository.CompanyRepository;
-import com.schoolar.lynx.notification.repository.NotificationRepository;
 import com.schoolar.lynx.notification.repository.NotificationUserRepository;
-import com.schoolar.lynx.repository.UserCompanyRepository;
 import com.schoolar.lynx.security.AuthenticatedUserService;
-import com.schoolar.lynx.utils.MapperUtil;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,14 +24,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class NotificationService {
     private final NotificationUserRepository notificationUserRepository;
     private final AuthenticatedUserService authenticatedUserService;
-
-//    public NotificationService(
-//            NotificationUserRepository notificationUserRepository,
-//            AuthenticatedUserService authenticatedUserService
-//    ) {
-//        this.notificationUserRepository = notificationUserRepository;
-//        this.authenticatedUserService = authenticatedUserService;
-//    }
 
     private final Map<UUID, List<SseEmitter>> clients = new ConcurrentHashMap<>();
 

@@ -1,4 +1,4 @@
-package com.schoolar.lynx.domain.dto;
+package com.schoolar.lynx.notification.dto;
 import com.schoolar.lynx.domain.enums.EventType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
