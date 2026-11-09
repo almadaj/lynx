@@ -3,10 +3,10 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 -- =====================================================
 -- USERS
 -- =====================================================
-CREATE SCHEMA seguranca;
-CREATE SCHEMA organizacao;
-CREATE SCHEMA academico;
-CREATE SCHEMA configuracao;
+CREATE SCHEMA IF NOT EXISTS seguranca;
+CREATE SCHEMA IF NOT EXISTS organizacao;
+CREATE SCHEMA IF NOT EXISTS academico;
+CREATE SCHEMA IF NOT EXISTS configuracao;
 
 CREATE TABLE seguranca.users (
     id UUID NOT NULL,

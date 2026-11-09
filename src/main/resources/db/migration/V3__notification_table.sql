@@ -1,4 +1,4 @@
-CREATE SCHEMA evento;
+CREATE SCHEMA IF NOT EXISTS evento;
 CREATE TABLE evento.notification (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
