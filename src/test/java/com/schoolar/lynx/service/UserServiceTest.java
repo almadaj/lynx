@@ -3,6 +3,7 @@ package com.schoolar.lynx.service;
 import com.schoolar.lynx.domain.dto.UserResponseDTO;
 import com.schoolar.lynx.domain.model.User;
 import com.schoolar.lynx.repository.UserRepository;
+import com.schoolar.lynx.storage.RailwayStorageService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,6 +23,9 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
+
+    @Mock
+    private RailwayStorageService storageService;
 
     @Mock
     private UserRepository repository;
@@ -79,6 +83,7 @@ class UserServiceTest {
     @Test
     void shouldThrow404WhenUserInactive() {
         user.setActive(false);
+
         when(repository.findById(userId)).thenReturn(Optional.of(user));
 
         ResponseStatusException exception = assertThrows(
@@ -86,8 +91,8 @@ class UserServiceTest {
                 () -> service.findById(userId)
         );
 
-        Assertions.assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
-        Assertions.assertEquals("Usuário não existe mais", exception.getReason());
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+        assertEquals("Usuário não encontrado", exception.getReason());
     }
 
     // ===============================
