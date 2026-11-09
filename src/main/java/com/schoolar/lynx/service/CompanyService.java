@@ -263,7 +263,7 @@ public class CompanyService {
         }
 
         return userCompanyRepository
-                .findAllByCompanyIdAndRoleIn(
+                .findAllByCompanyIdAndActiveTrueAndRoleIn(
                         companyId,
                         List.of(Role.TEACHER, Role.HEADTEACHER, Role.PRINCIPAL)
                 )
@@ -310,7 +310,7 @@ public class CompanyService {
         }
 
         return userCompanyRepository
-                .findAllByCompanyIdAndRoleIn(
+                .findAllByCompanyIdAndActiveTrueAndRoleIn(
                         companyId,
                         List.of(Role.STUDENT)
                 )

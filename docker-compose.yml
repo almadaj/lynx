@@ -15,6 +15,17 @@ services:
     volumes:
       - educ_app_postgres_data:/var/lib/postgresql
 
+  rabbitmq:
+    image: rabbitmq:4-management
+    container_name: lynx_rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: lynx
+      RABBITMQ_DEFAULT_PASS: lynx_study_123
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
 volumes:
   educ_app_postgres_data:
     name: educ_app_postgres_data
