@@ -30,6 +30,9 @@ class CompanyServiceTest {
     private CompanyRepository companyRepository;
 
     @Mock
+    private UserCompanyService userCompanyService;
+
+    @Mock
     private UserRepository userRepository;
 
     @InjectMocks
@@ -55,7 +58,6 @@ class CompanyServiceTest {
         company.setCompanyName("Sample School Inc.");
         company.setCnpj("0000000000000");
         company.setEmail("company@inc.com");
-        company.setActive(true);
         company.setPrincipalTeacher(principal);
     }
 
@@ -73,7 +75,6 @@ class CompanyServiceTest {
 
         SecurityContextHolder.setContext(securityContext);
 
-        principal.setAdmin(true);
 
         RegisterCompanyDTO dto = new RegisterCompanyDTO();
         dto.setPublicName("Sample School");
@@ -98,7 +99,10 @@ class CompanyServiceTest {
         assertNotNull(response);
         assertEquals("Sample School", response.getPublicName());
 
-        verify(companyRepository).save(any(Company.class));
+        verify(userCompanyService).createPrincipalUserCompany(
+                principal,
+                company
+        );
     }
 
 }
