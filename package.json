@@ -1,0 +1,13 @@
+{
+  "name": "lynx",
+  "private": true,
+  "scripts": {
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "db:reset": "docker compose down -v && docker compose up -d",
+    "db:seed": "docker exec -i educ_app_postgres psql -U educ_app -d lynx_dev < src/main/resources/db/seed/seed.sql",
+    "db:logs": "docker logs -f educ_app_postgres",
+    "test": "./mvnw clean test",
+    "build": "./mvnw -B -DskipTests clean install"
+  }
+}
