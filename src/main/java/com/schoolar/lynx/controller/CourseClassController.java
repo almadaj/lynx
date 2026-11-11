@@ -3,6 +3,7 @@ package com.schoolar.lynx.controller;
 import com.schoolar.lynx.domain.dto.CourseClassCreateDTO;
 import com.schoolar.lynx.domain.dto.CourseClassResponseDTO;
 import com.schoolar.lynx.domain.dto.CourseClassUpdateDTO;
+import com.schoolar.lynx.domain.dto.StudentDTO;
 import com.schoolar.lynx.service.CourseClassService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,5 +48,10 @@ public class CourseClassController {
     @GetMapping("/company/{companyId}")
     public List<CourseClassResponseDTO> getCoursesByCompanyId(@PathVariable UUID companyId){
         return service.findCoursesByCompany(companyId);
+    }
+
+    @GetMapping("/{id}/students")
+    public List<StudentDTO> getStudentsInClassCourses(@PathVariable UUID id){
+        return service.findStudentsByCourseClass(id);
     }
 }
