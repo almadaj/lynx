@@ -16,7 +16,6 @@ public class CourseClassStudentController {
     @Autowired
     CourseClassStudentsService service;
 
-    //TODO: futuramente fazer add, transfer e remove em massa
     @PostMapping("/{courseId}/student")
     public void addStudent (@PathVariable UUID courseId, @RequestBody StudentsToCourseClassDTO dto){
         service.addStudent(courseId, dto);

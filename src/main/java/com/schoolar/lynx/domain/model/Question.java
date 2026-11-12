@@ -41,7 +41,7 @@ public class Question {
     @NotNull
     @Min(0)
     @Max(2)
-    private int privacy;
+    private int privacy; //0: publica, 1: privada a instituição, 2: privada ao autor
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

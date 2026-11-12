@@ -3,6 +3,9 @@ package com.schoolar.lynx.service;
 import com.schoolar.lynx.domain.dto.QuestionResponseDTO;
 import com.schoolar.lynx.domain.dto.RegisterQuestionDTO;
 import com.schoolar.lynx.domain.dto.UpdateQuestionDTO;
+import com.schoolar.lynx.domain.enums.Difficulty;
+import com.schoolar.lynx.domain.enums.Language;
+import com.schoolar.lynx.domain.enums.QuestionType;
 import com.schoolar.lynx.domain.enums.Role;
 import com.schoolar.lynx.domain.mapper.QuestionMapper;
 import com.schoolar.lynx.domain.model.Company;
@@ -11,9 +14,11 @@ import com.schoolar.lynx.domain.model.User;
 import com.schoolar.lynx.repository.CompanyRepository;
 import com.schoolar.lynx.repository.QuestionRepository;
 import com.schoolar.lynx.security.AuthenticatedUserService;
+import com.schoolar.lynx.specification.QuestionSpecification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -91,8 +96,27 @@ public class QuestionService {
         return "Questão deletada com sucesso";
     }
 
-    public Page<QuestionResponseDTO> findAll(String search, Pageable pageable) {
-        return questionRepository.findAllActive(search, pageable)
+    public Page<QuestionResponseDTO> findAll(
+            String search,
+            Difficulty difficulty,
+            QuestionType questionType,
+            Language language,
+            Integer privacy,
+            Pageable pageable
+    ) {
+        Specification<Question> specification = QuestionSpecification.filter(
+                search,
+                difficulty,
+                questionType,
+                language,
+                privacy,
+                null,
+                null
+        );
+
+        //TODO: prioridadade, fazer os filtros de privacy, author e company
+
+        return questionRepository.findAll(specification, pageable)
                 .map(QuestionMapper::toResponseDTO);
     }
 

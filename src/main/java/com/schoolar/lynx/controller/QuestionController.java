@@ -3,6 +3,9 @@ package com.schoolar.lynx.controller;
 import com.schoolar.lynx.domain.dto.QuestionResponseDTO;
 import com.schoolar.lynx.domain.dto.RegisterQuestionDTO;
 import com.schoolar.lynx.domain.dto.UpdateQuestionDTO;
+import com.schoolar.lynx.domain.enums.Difficulty;
+import com.schoolar.lynx.domain.enums.Language;
+import com.schoolar.lynx.domain.enums.QuestionType;
 import com.schoolar.lynx.service.QuestionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +17,6 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -36,16 +38,28 @@ public class QuestionController {
 
     @GetMapping
     public ResponseEntity<Page<QuestionResponseDTO>> findAll(
-            String search,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Difficulty difficulty,
+            @RequestParam(required = false) QuestionType questionType,
+            @RequestParam(required = false) Language language,
+            @RequestParam(required = false) Integer privacy,
             @PageableDefault(
                     page = 0,
                     size = 10,
                     sort = "createdAt",
                     direction = Sort.Direction.DESC
-            )
-            Pageable pageable
+            ) Pageable pageable
     ) {
-        return ResponseEntity.ok(service.findAll(search, pageable));
+        return ResponseEntity.ok(
+                service.findAll(
+                        search,
+                        difficulty,
+                        questionType,
+                        language,
+                        privacy,
+                        pageable
+                )
+        );
     }
 
     @PutMapping("/{id}")

@@ -5,6 +5,7 @@ import com.schoolar.lynx.domain.enums.Role;
 import com.schoolar.lynx.domain.mapper.CourseClassMapper;
 import com.schoolar.lynx.domain.model.Company;
 import com.schoolar.lynx.domain.model.CourseClass;
+import com.schoolar.lynx.domain.model.CourseClassStudent;
 import com.schoolar.lynx.domain.model.User;
 import com.schoolar.lynx.domain.event.courseClass.ClassCreatedEvent;
 import com.schoolar.lynx.notification.messaging.producer.ClassCreatedProducer;
@@ -224,6 +225,31 @@ public class CourseClassService {
         classes = courseRepository.findByCompanyIdWithStudents(companyId);
         return classes.stream()
                 .map(CourseClassMapper::toDTO)
+                .toList();
+    }
+
+    public List<StudentDTO> findStudentsByCourseClass(UUID id){
+        authenticatedUserService.get();
+        CourseClass course = courseRepository.findByIdWithStudents(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Turma não encontrada"
+                ));
+
+        return course.getStudents()
+                .stream()
+                .filter(enrollment -> enrollment.getStudent().isActive())
+                .map(enrollment -> {
+                    User student = enrollment.getStudent();
+
+                    StudentDTO s = new StudentDTO();
+                    s.setId(student.getId());
+                    s.setName(student.getName());
+                    s.setEmail(student.getEmail());
+                    s.setProfilePhoto(student.getProfilePhoto());
+                    s.setBirth(student.getBirth());
+                    return s;
+                })
                 .toList();
     }
 }
