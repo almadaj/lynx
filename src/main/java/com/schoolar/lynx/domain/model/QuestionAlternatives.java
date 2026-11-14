@@ -3,9 +3,19 @@ package com.schoolar.lynx.domain.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import lombok.*;
 
 import java.util.UUID;
 
+@Entity
+@Getter
+@Setter
+@ToString
+@EqualsAndHashCode
+@NoArgsConstructor
+@AllArgsConstructor
+@Table(name = "question_alternative", schema = "academico")
+@Builder
 public class QuestionAlternatives {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -21,7 +31,7 @@ public class QuestionAlternatives {
 
     @NotNull
     @Min(1)
-    private int order;
+    private int altOrder;
 
     @Column(name = "is_correct", nullable = false)
     private boolean isCorrect;

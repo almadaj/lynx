@@ -1,5 +1,6 @@
 package com.schoolar.lynx.controller;
 
+import com.schoolar.lynx.domain.dto.AlternativesResponseDTO;
 import com.schoolar.lynx.domain.dto.QuestionResponseDTO;
 import com.schoolar.lynx.domain.dto.RegisterQuestionDTO;
 import com.schoolar.lynx.domain.dto.UpdateQuestionDTO;
@@ -17,6 +18,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -34,6 +36,11 @@ public class QuestionController {
     @GetMapping("/{id}")
     public ResponseEntity<QuestionResponseDTO> findById(@PathVariable UUID id){
         return ResponseEntity.ok(service.findById(id));
+    }
+
+    @GetMapping("/{id}/alternatives")
+    public ResponseEntity<List<AlternativesResponseDTO>> findAlternativesById(@PathVariable UUID id){
+        return ResponseEntity.ok(service.findAlternatives(id));
     }
 
     @GetMapping
