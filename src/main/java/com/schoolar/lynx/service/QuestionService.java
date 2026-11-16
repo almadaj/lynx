@@ -16,8 +16,10 @@ import com.schoolar.lynx.domain.model.User;
 import com.schoolar.lynx.repository.CompanyRepository;
 import com.schoolar.lynx.repository.QuestionAlternativesRepository;
 import com.schoolar.lynx.repository.QuestionRepository;
+import com.schoolar.lynx.repository.UserCompanyRepository;
 import com.schoolar.lynx.security.AuthenticatedUserService;
 import com.schoolar.lynx.specification.QuestionSpecification;
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -40,6 +42,7 @@ public class QuestionService {
     private final AuthenticatedUserService authUserService;
     private final CompanyRepository companyRepository;
     private final CompanyAuthorizationService authorizationService;
+    private final UserCompanyRepository userCompanyRepository;
 
 
     public QuestionResponseDTO create(RegisterQuestionDTO dto){
@@ -112,7 +115,16 @@ public class QuestionService {
             Integer privacy,
             Pageable pageable
     ) {
-        Specification<Question> specification = QuestionSpecification.filter(
+        User loggedUser = authUserService.get();
+
+        List<UUID> companyIds = userCompanyRepository
+                .findAllByUserIdAndActiveTrue(loggedUser.getId())
+                .stream()
+                .filter(uc -> uc.getRole().hasPermission(Role.TEACHER))
+                .map(uc -> uc.getCompany().getId())
+                .toList();
+
+        Specification<Question> filters = QuestionSpecification.filter(
                 search,
                 difficulty,
                 questionType,
@@ -122,18 +134,33 @@ public class QuestionService {
                 null
         );
 
-        //TODO: prioridadade, fazer os filtros de privacy, author e company
+        Specification<Question> visibility = visibleTo(
+                loggedUser.getId(),
+                companyIds
+        );
 
-        return questionRepository.findAll(specification, pageable)
-                .map(QuestionMapper::toResponseDTO);
+        return questionRepository.findAll(
+                visibility.and(filters),
+                pageable
+        ).map(QuestionMapper::toResponseDTO);
     }
 
-    public QuestionResponseDTO findById(UUID id){
+    public QuestionResponseDTO findById(UUID id) {
         Question question = questionRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Questão não encontrada"
                 ));
+
+        User loggedUser = authUserService.get();
+
+        if (!canAccess(question, loggedUser)) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Não é possível visualizar questão"
+            );
+        }
+
         return QuestionMapper.toResponseDTO(question);
     }
 
@@ -143,6 +170,15 @@ public class QuestionService {
                         HttpStatus.NOT_FOUND,
                         "Questão não encontrada"
                 ));
+
+        User loggedUser = authUserService.get();
+
+        if (!canAccess(question, loggedUser)) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Questão não encontrada"
+            );
+        }
 
         if (question.getQuestionType() != QuestionType.MULTIPLE_CHOICE) {
             throw new ResponseStatusException(
@@ -156,5 +192,48 @@ public class QuestionService {
                 .stream()
                 .map(QuestionAlternativesMapper::toResponseDTO)
                 .toList();
+    }
+
+    private boolean canAccess(Question question, User loggedUser) {
+        return switch (question.getPrivacy()) {
+            case 0 -> true;
+
+            case 1 -> authorizationService
+                    .getUserRole(
+                            loggedUser.getId(),
+                            question.getCompany().getId()
+                    )
+                    .hasPermission(Role.TEACHER);
+
+            case 2 -> question.getAuthor().getId().equals(loggedUser.getId());
+
+            default -> false;
+        };
+    }
+    public static Specification<Question> visibleTo(
+            UUID userId,
+            List<UUID> companyIds
+    ) {
+        return (root, query, cb) -> {
+            Predicate publicQuestions = cb.equal(root.get("privacy"), 0);
+
+            Predicate privateQuestions = cb.and(
+                    cb.equal(root.get("privacy"), 2),
+                    cb.equal(root.get("author").get("id"), userId)
+            );
+
+            Predicate institutionalQuestions = companyIds.isEmpty()
+                    ? cb.disjunction()
+                    : cb.and(
+                    cb.equal(root.get("privacy"), 1),
+                    root.get("company").get("id").in(companyIds)
+            );
+
+            return cb.or(
+                    publicQuestions,
+                    privateQuestions,
+                    institutionalQuestions
+            );
+        };
     }
 }
