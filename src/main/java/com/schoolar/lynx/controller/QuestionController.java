@@ -1,12 +1,10 @@
 package com.schoolar.lynx.controller;
 
-import com.schoolar.lynx.domain.dto.AlternativesResponseDTO;
-import com.schoolar.lynx.domain.dto.QuestionResponseDTO;
-import com.schoolar.lynx.domain.dto.RegisterQuestionDTO;
-import com.schoolar.lynx.domain.dto.UpdateQuestionDTO;
+import com.schoolar.lynx.domain.dto.*;
 import com.schoolar.lynx.domain.enums.Difficulty;
 import com.schoolar.lynx.domain.enums.Language;
 import com.schoolar.lynx.domain.enums.QuestionType;
+import com.schoolar.lynx.service.QuestionClassificationService;
 import com.schoolar.lynx.service.QuestionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +25,9 @@ import java.util.UUID;
 public class QuestionController {
     @Autowired
     private final QuestionService service;
+
+    @Autowired
+    private final QuestionClassificationService classificationService;
 
     @PostMapping
     public ResponseEntity<QuestionResponseDTO> create(@Valid @RequestBody RegisterQuestionDTO question){
@@ -67,6 +68,11 @@ public class QuestionController {
                         pageable
                 )
         );
+    }
+
+    @PostMapping("/classify")
+    public ResponseEntity<ClassifyQuestionResponseDTO> classify(@RequestBody ClassifyQuestionRequestDTO question){
+        return ResponseEntity.ok(classificationService.classify(question));
     }
 
     @PutMapping("/{id}")

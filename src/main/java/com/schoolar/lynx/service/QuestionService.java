@@ -1,9 +1,6 @@
 package com.schoolar.lynx.service;
 
-import com.schoolar.lynx.domain.dto.AlternativesResponseDTO;
-import com.schoolar.lynx.domain.dto.QuestionResponseDTO;
-import com.schoolar.lynx.domain.dto.RegisterQuestionDTO;
-import com.schoolar.lynx.domain.dto.UpdateQuestionDTO;
+import com.schoolar.lynx.domain.dto.*;
 import com.schoolar.lynx.domain.enums.Difficulty;
 import com.schoolar.lynx.domain.enums.Language;
 import com.schoolar.lynx.domain.enums.QuestionType;
@@ -194,6 +191,10 @@ public class QuestionService {
                 .toList();
     }
 
+    public void addAlternativesToQuestion(UUID questionId){
+        //TODO: terminar aqui
+    }
+
     private boolean canAccess(Question question, User loggedUser) {
         return switch (question.getPrivacy()) {
             case 0 -> true;
@@ -210,6 +211,7 @@ public class QuestionService {
             default -> false;
         };
     }
+
     public static Specification<Question> visibleTo(
             UUID userId,
             List<UUID> companyIds
