@@ -9,6 +9,7 @@ import com.schoolar.lynx.domain.mapper.QuestionAlternativesMapper;
 import com.schoolar.lynx.domain.mapper.QuestionMapper;
 import com.schoolar.lynx.domain.model.Company;
 import com.schoolar.lynx.domain.model.Question;
+import com.schoolar.lynx.domain.model.QuestionAlternatives;
 import com.schoolar.lynx.domain.model.User;
 import com.schoolar.lynx.repository.CompanyRepository;
 import com.schoolar.lynx.repository.QuestionAlternativesRepository;
@@ -23,10 +24,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import static com.schoolar.lynx.domain.enums.QuestionType.MULTIPLE_CHOICE;
@@ -55,6 +59,18 @@ public class QuestionService {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
                     "Nenhuma empresa vinculada"
+            );
+        }
+
+        if(
+                dto.getLanguage() == null ||
+                dto.getBody() == null ||
+                dto.getQuestionType() == null ||
+                dto.getDifficulty() == null
+        ){
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Há campos obrigatórios nulos"
             );
         }
 
@@ -161,6 +177,7 @@ public class QuestionService {
         return QuestionMapper.toResponseDTO(question);
     }
 
+    //QuestionAlternativas
     public List<AlternativesResponseDTO> findAlternatives(UUID questionId) {
         Question question = questionRepository.findById(questionId)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -191,8 +208,79 @@ public class QuestionService {
                 .toList();
     }
 
-    public void addAlternativesToQuestion(UUID questionId){
-        //TODO: terminar aqui
+    @Transactional
+    public void addAlternativesToQuestion(UUID questionId, List<RegisterAlternativeDTO> dto){
+        Question question = questionRepository.findById(questionId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Questão não encontrada"
+                ));
+
+        User loggedUser = authUserService.get();
+
+        if (!canAccess(question, loggedUser)) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Questão não encontrada"
+            );
+        }
+
+        if (question.getQuestionType() != QuestionType.MULTIPLE_CHOICE) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Essa questão não possui alternativas"
+            );
+        }
+
+        if (dto == null || dto.size() < 2) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "A questão deve possuir pelo menos duas alternativas"
+            );
+        }
+
+        long correctCount = dto.stream()
+                .filter(RegisterAlternativeDTO::isCorrect)
+                .count();
+
+        if (correctCount != 1) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "A questão deve possuir pelo menos uma alternativa correta"
+            );
+        }
+
+        if (dto.stream().anyMatch(item ->
+                item.getAlternativeText() == null ||
+                        item.getAlternativeText().isBlank()
+        )) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Todas as alternativas devem possuir um texto"
+            );
+        }
+
+        Set<Integer> orders = new HashSet<>();
+
+        for (RegisterAlternativeDTO item : dto) {
+            if (item.getAltOrder() < 1 || !orders.add(item.getAltOrder())) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "A ordem das alternativas é inválida ou duplicada"
+                );
+            }
+        }
+
+        List<QuestionAlternatives> alternatives = dto.stream()
+                .map(item -> QuestionAlternatives.builder()
+                        .question(question)
+                        .alternativeText(item.getAlternativeText())
+                        .altOrder(item.getAltOrder())
+                        .isCorrect(item.isCorrect())
+                        .build())
+                .toList();
+
+        alternativesRepository.saveAll(alternatives);
     }
 
     private boolean canAccess(Question question, User loggedUser) {

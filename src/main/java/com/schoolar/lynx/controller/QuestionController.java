@@ -44,6 +44,12 @@ public class QuestionController {
         return ResponseEntity.ok(service.findAlternatives(id));
     }
 
+    @PostMapping("/{id}/alternatives")
+    public ResponseEntity<Void> addAlternativeToQuestion(@PathVariable UUID id, @RequestBody List<RegisterAlternativeDTO> dto){
+        service.addAlternativesToQuestion(id, dto);
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping
     public ResponseEntity<Page<QuestionResponseDTO>> findAll(
             @RequestParam(required = false) String search,
