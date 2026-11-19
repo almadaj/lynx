@@ -99,7 +99,8 @@ public class QuestionService {
         return QuestionMapper.toResponseDTO(saved);
     }
 
-    public String delete (UUID id){
+    @Transactional
+    public String delete(UUID id) {
         User loggedUser = authUserService.get();
 
         Question question = questionRepository.findById(id)
@@ -107,16 +108,21 @@ public class QuestionService {
                         HttpStatus.NOT_FOUND,
                         "Questão não encontrada"
                 ));
+
         authorizationService.require(Role.TEACHER, question.getCompany().getId());
 
-        if (!loggedUser.getId().equals(question.getAuthor().getId())){
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "Somente o autor pode excluir");
+        if (!loggedUser.getId().equals(question.getAuthor().getId())) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Somente o autor pode excluir"
+            );
         }
 
-        question.setUpdatedAt(LocalDateTime.now());
-        question.setDeletedAt(LocalDateTime.now());
-        questionRepository.save(question);
+        LocalDateTime now = LocalDateTime.now();
+
+        question.setUpdatedAt(now);
+        question.setDeletedAt(now);
+
         return "Questão deletada com sucesso";
     }
 

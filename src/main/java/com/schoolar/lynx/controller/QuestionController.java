@@ -87,7 +87,8 @@ public class QuestionController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> delete(@PathVariable UUID id){
-        return ResponseEntity.ok(service.delete(id));
+    public ResponseEntity<Void> delete(@PathVariable UUID id){
+        ResponseEntity.ok(service.delete(id));
+        return ResponseEntity.noContent().build();
     }
 }
