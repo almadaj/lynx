@@ -3,6 +3,7 @@ package com.schoolar.lynx.domain.dto;
 import com.schoolar.lynx.domain.enums.Difficulty;
 import com.schoolar.lynx.domain.enums.Language;
 import com.schoolar.lynx.domain.enums.QuestionType;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -22,7 +23,7 @@ public class UpdateQuestionDTO {
 
     @NotNull
     @Min(0)
-    @Min(2)
+    @Max(2)
     private Integer privacy;
 
     @NotNull
