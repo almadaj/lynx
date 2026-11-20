@@ -6,6 +6,7 @@ import com.schoolar.lynx.domain.enums.QuestionType;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -22,4 +23,5 @@ public class QuestionResponseDTO {
     private String footer;
     private String expectedAnswer;
     private Language language;
+    private List<AlternativesResponseDTO> alternatives;
 }

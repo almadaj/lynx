@@ -10,4 +10,6 @@ import java.util.UUID;
 @Repository
 public interface QuestionAlternativesRepository extends JpaRepository<QuestionAlternatives, UUID> {
     List<QuestionAlternatives> findAllByQuestion_IdOrderByAltOrderAsc(UUID questionId);
+    boolean existsByQuestion_Id(UUID questionId);
+    void deleteAllByQuestion_Id(UUID questionId);
 }

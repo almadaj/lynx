@@ -76,11 +76,20 @@ public class QuestionService {
 
         Question question = QuestionMapper.toEntity(dto, loggedUser, company);
         Question saved = questionRepository.save(question);
-        return QuestionMapper.toResponseDTO(saved);
+        List<AlternativesResponseDTO> alternatives =
+                alternativesRepository
+                        .findAllByQuestion_IdOrderByAltOrderAsc(question.getId())
+                        .stream()
+                        .map(QuestionMapper::toAlternativesResponseDTO)
+                        .toList();
+
+        return QuestionMapper.toResponseDTO(question, alternatives);
     }
 
-    public QuestionResponseDTO update(UUID id, UpdateQuestionDTO dto){
+    @Transactional
+    public QuestionResponseDTO update(UUID id, UpdateQuestionDTO dto) {
         User loggedUser = authUserService.get();
+
         Question question = questionRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
@@ -89,14 +98,34 @@ public class QuestionService {
 
         authorizationService.require(Role.TEACHER, question.getCompany().getId());
 
-        if (!loggedUser.getId().equals(question.getAuthor().getId())){
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "Somente o autor pode alterar");
+        if (!loggedUser.getId().equals(question.getAuthor().getId())) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Somente o autor pode alterar"
+            );
+        }
+
+        if (question.getDeletedAt() != null) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Questão não encontrada"
+            );
         }
 
         QuestionMapper.updateEntity(question, dto);
+
+        replaceAlternatives(question, dto.getAlternatives());
+
         Question saved = questionRepository.save(question);
-        return QuestionMapper.toResponseDTO(saved);
+
+        List<AlternativesResponseDTO> alternatives =
+                alternativesRepository
+                        .findAllByQuestion_IdOrderByAltOrderAsc(id)
+                        .stream()
+                        .map(QuestionMapper::toAlternativesResponseDTO)
+                        .toList();
+
+        return QuestionMapper.toResponseDTO(question, alternatives);
     }
 
     @Transactional
@@ -180,10 +209,17 @@ public class QuestionService {
             );
         }
 
-        return QuestionMapper.toResponseDTO(question);
+        List<AlternativesResponseDTO> alternatives =
+                alternativesRepository
+                        .findAllByQuestion_IdOrderByAltOrderAsc(id)
+                        .stream()
+                        .map(QuestionMapper::toAlternativesResponseDTO)
+                        .toList();
+
+        return QuestionMapper.toResponseDTO(question, alternatives);
     }
 
-    //QuestionAlternativas
+    //QuestionAlternatives
     public List<AlternativesResponseDTO> findAlternatives(UUID questionId) {
         Question question = questionRepository.findById(questionId)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -238,6 +274,47 @@ public class QuestionService {
             );
         }
 
+        validateAlternatives(dto);
+
+        List<QuestionAlternatives> alternatives = dto.stream()
+                .map(item -> QuestionAlternatives.builder()
+                        .question(question)
+                        .alternativeText(item.getAlternativeText())
+                        .altOrder(item.getAltOrder())
+                        .isCorrect(item.isCorrect())
+                        .build())
+                .toList();
+
+        alternativesRepository.saveAll(alternatives);
+    }
+
+    @Transactional
+    public void replaceAlternatives(
+            Question question,
+            List<RegisterAlternativeDTO> dto
+    ) {
+        if (question.getQuestionType() != QuestionType.MULTIPLE_CHOICE) {
+            alternativesRepository.deleteAllByQuestion_Id(question.getId());
+            return;
+        }
+
+        validateAlternatives(dto);
+
+        alternativesRepository.deleteAllByQuestion_Id(question.getId());
+
+        List<QuestionAlternatives> alternatives = dto.stream()
+                .map(item -> QuestionAlternatives.builder()
+                        .question(question)
+                        .alternativeText(item.getAlternativeText())
+                        .altOrder(item.getAltOrder())
+                        .isCorrect(item.isCorrect())
+                        .build())
+                .toList();
+
+        alternativesRepository.saveAll(alternatives);
+    }
+
+    private void validateAlternatives(List<RegisterAlternativeDTO> dto) {
         if (dto == null || dto.size() < 2) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
@@ -252,7 +329,7 @@ public class QuestionService {
         if (correctCount != 1) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "A questão deve possuir pelo menos uma alternativa correta"
+                    "A questão deve possuir exatamente uma alternativa correta"
             );
         }
 
@@ -276,17 +353,6 @@ public class QuestionService {
                 );
             }
         }
-
-        List<QuestionAlternatives> alternatives = dto.stream()
-                .map(item -> QuestionAlternatives.builder()
-                        .question(question)
-                        .alternativeText(item.getAlternativeText())
-                        .altOrder(item.getAltOrder())
-                        .isCorrect(item.isCorrect())
-                        .build())
-                .toList();
-
-        alternativesRepository.saveAll(alternatives);
     }
 
     private boolean canAccess(Question question, User loggedUser) {
