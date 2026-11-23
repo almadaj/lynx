@@ -1,11 +1,10 @@
 package com.schoolar.lynx.controller;
 
-import com.schoolar.lynx.domain.dto.QuestionResponseDTO;
-import com.schoolar.lynx.domain.dto.RegisterQuestionDTO;
-import com.schoolar.lynx.domain.dto.UpdateQuestionDTO;
+import com.schoolar.lynx.domain.dto.*;
 import com.schoolar.lynx.domain.enums.Difficulty;
 import com.schoolar.lynx.domain.enums.Language;
 import com.schoolar.lynx.domain.enums.QuestionType;
+import com.schoolar.lynx.service.QuestionClassificationService;
 import com.schoolar.lynx.service.QuestionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +16,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -26,6 +26,9 @@ public class QuestionController {
     @Autowired
     private final QuestionService service;
 
+    @Autowired
+    private final QuestionClassificationService classificationService;
+
     @PostMapping
     public ResponseEntity<QuestionResponseDTO> create(@Valid @RequestBody RegisterQuestionDTO question){
         return ResponseEntity.ok(service.create(question));
@@ -34,6 +37,17 @@ public class QuestionController {
     @GetMapping("/{id}")
     public ResponseEntity<QuestionResponseDTO> findById(@PathVariable UUID id){
         return ResponseEntity.ok(service.findById(id));
+    }
+
+    @GetMapping("/{id}/alternatives")
+    public ResponseEntity<List<AlternativesResponseDTO>> findAlternativesById(@PathVariable UUID id){
+        return ResponseEntity.ok(service.findAlternatives(id));
+    }
+
+    @PostMapping("/{id}/alternatives")
+    public ResponseEntity<Void> addAlternativeToQuestion(@PathVariable UUID id, @RequestBody List<RegisterAlternativeDTO> dto){
+        service.addAlternativesToQuestion(id, dto);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping
@@ -62,13 +76,20 @@ public class QuestionController {
         );
     }
 
+    @PostMapping("/classify")
+    public ResponseEntity<ClassifyQuestionResponseDTO> classify(@RequestBody ClassifyQuestionRequestDTO question){
+        return ResponseEntity.ok(classificationService.classify(question));
+    }
+
     @PutMapping("/{id}")
-    public ResponseEntity<QuestionResponseDTO> update(@PathVariable UUID id, @RequestBody UpdateQuestionDTO question){
+    public ResponseEntity<QuestionResponseDTO> update(@PathVariable UUID id,
+                                                      @Valid @RequestBody UpdateQuestionDTO question){
         return ResponseEntity.ok(service.update(id, question));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> delete(@PathVariable UUID id){
-        return ResponseEntity.ok(service.delete(id));
+    public ResponseEntity<Void> delete(@PathVariable UUID id){
+        ResponseEntity.ok(service.delete(id));
+        return ResponseEntity.noContent().build();
     }
 }

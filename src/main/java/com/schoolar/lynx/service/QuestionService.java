@@ -1,38 +1,50 @@
 package com.schoolar.lynx.service;
 
-import com.schoolar.lynx.domain.dto.QuestionResponseDTO;
-import com.schoolar.lynx.domain.dto.RegisterQuestionDTO;
-import com.schoolar.lynx.domain.dto.UpdateQuestionDTO;
+import com.schoolar.lynx.domain.dto.*;
 import com.schoolar.lynx.domain.enums.Difficulty;
 import com.schoolar.lynx.domain.enums.Language;
 import com.schoolar.lynx.domain.enums.QuestionType;
 import com.schoolar.lynx.domain.enums.Role;
+import com.schoolar.lynx.domain.mapper.QuestionAlternativesMapper;
 import com.schoolar.lynx.domain.mapper.QuestionMapper;
 import com.schoolar.lynx.domain.model.Company;
 import com.schoolar.lynx.domain.model.Question;
+import com.schoolar.lynx.domain.model.QuestionAlternatives;
 import com.schoolar.lynx.domain.model.User;
 import com.schoolar.lynx.repository.CompanyRepository;
+import com.schoolar.lynx.repository.QuestionAlternativesRepository;
 import com.schoolar.lynx.repository.QuestionRepository;
+import com.schoolar.lynx.repository.UserCompanyRepository;
 import com.schoolar.lynx.security.AuthenticatedUserService;
 import com.schoolar.lynx.specification.QuestionSpecification;
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+
+import static com.schoolar.lynx.domain.enums.QuestionType.MULTIPLE_CHOICE;
 
 @Service
 @RequiredArgsConstructor
 public class QuestionService {
     private final QuestionRepository questionRepository;
+    private final QuestionAlternativesRepository alternativesRepository;
     private final AuthenticatedUserService authUserService;
     private final CompanyRepository companyRepository;
     private final CompanyAuthorizationService authorizationService;
+    private final UserCompanyRepository userCompanyRepository;
+
 
     public QuestionResponseDTO create(RegisterQuestionDTO dto){
         authorizationService.require(Role.TEACHER, dto.getCompanyId());
@@ -50,13 +62,34 @@ public class QuestionService {
             );
         }
 
+        if(
+                dto.getLanguage() == null ||
+                dto.getBody() == null ||
+                dto.getQuestionType() == null ||
+                dto.getDifficulty() == null
+        ){
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Há campos obrigatórios nulos"
+            );
+        }
+
         Question question = QuestionMapper.toEntity(dto, loggedUser, company);
         Question saved = questionRepository.save(question);
-        return QuestionMapper.toResponseDTO(saved);
+        List<AlternativesResponseDTO> alternatives =
+                alternativesRepository
+                        .findAllByQuestion_IdOrderByAltOrderAsc(question.getId())
+                        .stream()
+                        .map(QuestionMapper::toAlternativesResponseDTO)
+                        .toList();
+
+        return QuestionMapper.toResponseDTO(question, alternatives);
     }
 
-    public QuestionResponseDTO update(UUID id, UpdateQuestionDTO dto){
+    @Transactional
+    public QuestionResponseDTO update(UUID id, UpdateQuestionDTO dto) {
         User loggedUser = authUserService.get();
+
         Question question = questionRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
@@ -65,17 +98,38 @@ public class QuestionService {
 
         authorizationService.require(Role.TEACHER, question.getCompany().getId());
 
-        if (!loggedUser.getId().equals(question.getAuthor().getId())){
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "Somente o autor pode alterar");
+        if (!loggedUser.getId().equals(question.getAuthor().getId())) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Somente o autor pode alterar"
+            );
+        }
+
+        if (question.getDeletedAt() != null) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Questão não encontrada"
+            );
         }
 
         QuestionMapper.updateEntity(question, dto);
+
+        replaceAlternatives(question, dto.getAlternatives());
+
         Question saved = questionRepository.save(question);
-        return QuestionMapper.toResponseDTO(saved);
+
+        List<AlternativesResponseDTO> alternatives =
+                alternativesRepository
+                        .findAllByQuestion_IdOrderByAltOrderAsc(id)
+                        .stream()
+                        .map(QuestionMapper::toAlternativesResponseDTO)
+                        .toList();
+
+        return QuestionMapper.toResponseDTO(question, alternatives);
     }
 
-    public String delete (UUID id){
+    @Transactional
+    public String delete(UUID id) {
         User loggedUser = authUserService.get();
 
         Question question = questionRepository.findById(id)
@@ -83,16 +137,21 @@ public class QuestionService {
                         HttpStatus.NOT_FOUND,
                         "Questão não encontrada"
                 ));
+
         authorizationService.require(Role.TEACHER, question.getCompany().getId());
 
-        if (!loggedUser.getId().equals(question.getAuthor().getId())){
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "Somente o autor pode excluir");
+        if (!loggedUser.getId().equals(question.getAuthor().getId())) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Somente o autor pode excluir"
+            );
         }
 
-        question.setUpdatedAt(LocalDateTime.now());
-        question.setDeletedAt(LocalDateTime.now());
-        questionRepository.save(question);
+        LocalDateTime now = LocalDateTime.now();
+
+        question.setUpdatedAt(now);
+        question.setDeletedAt(now);
+
         return "Questão deletada com sucesso";
     }
 
@@ -104,7 +163,16 @@ public class QuestionService {
             Integer privacy,
             Pageable pageable
     ) {
-        Specification<Question> specification = QuestionSpecification.filter(
+        User loggedUser = authUserService.get();
+
+        List<UUID> companyIds = userCompanyRepository
+                .findAllByUserIdAndActiveTrue(loggedUser.getId())
+                .stream()
+                .filter(uc -> uc.getRole().hasPermission(Role.TEACHER))
+                .map(uc -> uc.getCompany().getId())
+                .toList();
+
+        Specification<Question> filters = QuestionSpecification.filter(
                 search,
                 difficulty,
                 questionType,
@@ -114,18 +182,220 @@ public class QuestionService {
                 null
         );
 
-        //TODO: prioridadade, fazer os filtros de privacy, author e company
+        Specification<Question> visibility = visibleTo(
+                loggedUser.getId(),
+                companyIds
+        );
 
-        return questionRepository.findAll(specification, pageable)
-                .map(QuestionMapper::toResponseDTO);
+        return questionRepository.findAll(
+                visibility.and(filters),
+                pageable
+        ).map(QuestionMapper::toResponseDTO);
     }
 
-    public QuestionResponseDTO findById(UUID id){
+    public QuestionResponseDTO findById(UUID id) {
         Question question = questionRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Questão não encontrada"
                 ));
-        return QuestionMapper.toResponseDTO(question);
+
+        User loggedUser = authUserService.get();
+
+        if (!canAccess(question, loggedUser)) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Não é possível visualizar questão"
+            );
+        }
+
+        List<AlternativesResponseDTO> alternatives =
+                alternativesRepository
+                        .findAllByQuestion_IdOrderByAltOrderAsc(id)
+                        .stream()
+                        .map(QuestionMapper::toAlternativesResponseDTO)
+                        .toList();
+
+        return QuestionMapper.toResponseDTO(question, alternatives);
+    }
+
+    //QuestionAlternatives
+    public List<AlternativesResponseDTO> findAlternatives(UUID questionId) {
+        Question question = questionRepository.findById(questionId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Questão não encontrada"
+                ));
+
+        User loggedUser = authUserService.get();
+
+        if (!canAccess(question, loggedUser)) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Questão não encontrada"
+            );
+        }
+
+        if (question.getQuestionType() != QuestionType.MULTIPLE_CHOICE) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Essa questão não possui alternativas"
+            );
+        }
+
+        return alternativesRepository
+                .findAllByQuestion_IdOrderByAltOrderAsc(questionId)
+                .stream()
+                .map(QuestionAlternativesMapper::toResponseDTO)
+                .toList();
+    }
+
+    @Transactional
+    public void addAlternativesToQuestion(UUID questionId, List<RegisterAlternativeDTO> dto){
+        Question question = questionRepository.findById(questionId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Questão não encontrada"
+                ));
+
+        User loggedUser = authUserService.get();
+
+        if (!canAccess(question, loggedUser)) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Questão não encontrada"
+            );
+        }
+
+        if (question.getQuestionType() != QuestionType.MULTIPLE_CHOICE) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Essa questão não possui alternativas"
+            );
+        }
+
+        validateAlternatives(dto);
+
+        List<QuestionAlternatives> alternatives = dto.stream()
+                .map(item -> QuestionAlternatives.builder()
+                        .question(question)
+                        .alternativeText(item.getAlternativeText())
+                        .altOrder(item.getAltOrder())
+                        .isCorrect(item.isCorrect())
+                        .build())
+                .toList();
+
+        alternativesRepository.saveAll(alternatives);
+    }
+
+    @Transactional
+    public void replaceAlternatives(
+            Question question,
+            List<RegisterAlternativeDTO> dto
+    ) {
+        if (question.getQuestionType() != QuestionType.MULTIPLE_CHOICE) {
+            alternativesRepository.deleteAllByQuestion_Id(question.getId());
+            return;
+        }
+
+        validateAlternatives(dto);
+
+        alternativesRepository.deleteAllByQuestion_Id(question.getId());
+
+        List<QuestionAlternatives> alternatives = dto.stream()
+                .map(item -> QuestionAlternatives.builder()
+                        .question(question)
+                        .alternativeText(item.getAlternativeText())
+                        .altOrder(item.getAltOrder())
+                        .isCorrect(item.isCorrect())
+                        .build())
+                .toList();
+
+        alternativesRepository.saveAll(alternatives);
+    }
+
+    private void validateAlternatives(List<RegisterAlternativeDTO> dto) {
+        if (dto == null || dto.size() < 2) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "A questão deve possuir pelo menos duas alternativas"
+            );
+        }
+
+        long correctCount = dto.stream()
+                .filter(RegisterAlternativeDTO::isCorrect)
+                .count();
+
+        if (correctCount != 1) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "A questão deve possuir exatamente uma alternativa correta"
+            );
+        }
+
+        if (dto.stream().anyMatch(item ->
+                item.getAlternativeText() == null ||
+                        item.getAlternativeText().isBlank()
+        )) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Todas as alternativas devem possuir um texto"
+            );
+        }
+
+        Set<Integer> orders = new HashSet<>();
+
+        for (RegisterAlternativeDTO item : dto) {
+            if (item.getAltOrder() < 1 || !orders.add(item.getAltOrder())) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "A ordem das alternativas é inválida ou duplicada"
+                );
+            }
+        }
+    }
+
+    private boolean canAccess(Question question, User loggedUser) {
+        return switch (question.getPrivacy()) {
+            case 0 -> true;
+
+            case 1 -> authorizationService
+                    .getUserRole(
+                            loggedUser.getId(),
+                            question.getCompany().getId()
+                    )
+                    .hasPermission(Role.TEACHER);
+
+            case 2 -> question.getAuthor().getId().equals(loggedUser.getId());
+
+            default -> false;
+        };
+    }
+
+    public static Specification<Question> visibleTo(
+            UUID userId,
+            List<UUID> companyIds
+    ) {
+        return (root, query, cb) -> {
+            Predicate publicQuestions = cb.equal(root.get("privacy"), 0);
+
+            Predicate privateQuestions = cb.and(
+                    cb.equal(root.get("privacy"), 2),
+                    cb.equal(root.get("author").get("id"), userId)
+            );
+
+            Predicate institutionalQuestions = companyIds.isEmpty()
+                    ? cb.disjunction()
+                    : cb.and(
+                    cb.equal(root.get("privacy"), 1),
+                    root.get("company").get("id").in(companyIds)
+            );
+
+            return cb.or(
+                    publicQuestions,
+                    privateQuestions,
+                    institutionalQuestions
+            );
+        };
     }
 }
