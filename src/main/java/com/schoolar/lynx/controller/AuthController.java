@@ -47,36 +47,16 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Void> register (
+    public ResponseEntity<Void> register(
             @Valid @RequestBody RegisterRequestDTO dto,
             HttpServletResponse response
-            ){
-        String token = authService.register(dto);
-        addAuthCookie(response, token); //TODO: refact, remover
+    ) {
+        authService.register(dto, response);
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("/me")
     public ResponseEntity<AuthUserDTO> me() {
         return ResponseEntity.ok(authService.me());
-    }
-
-    private void addAuthCookie(
-            HttpServletResponse response,
-            String token
-    ){
-        ResponseCookie cookie = ResponseCookie
-                .from("access_token", token)
-                .httpOnly(true)
-                .secure(false) //TODO: em prod isso deve ser true
-                .sameSite("Lax")
-                .path("/")
-                .maxAge(Duration.ofHours(1))
-                .build();
-
-        response.addHeader(
-                HttpHeaders.SET_COOKIE,
-                cookie.toString()
-        );
     }
 }

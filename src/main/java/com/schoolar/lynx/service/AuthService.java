@@ -10,6 +10,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -30,6 +31,9 @@ public class AuthService {
     private final RefreshTokenService refreshTokenService;
     private final PasswordEncoder passwordEncoder;
     private final UserCompanyRepository userCompanyRepository;
+
+    @Value("${jwt.token.secure}")
+    private Boolean jwtTokenSecure;
 
     public void login(LoginRequestDTO dto, HttpServletResponse response) {
         User user = userRepository.findByEmail(dto.getEmail())
@@ -56,7 +60,10 @@ public class AuthService {
             addAccessTokenCookie(response, accessToken);
     }
 
-    public String register(RegisterRequestDTO dto) {
+    public void register(
+            RegisterRequestDTO dto,
+            HttpServletResponse response
+    ) {
         if (userRepository.findByEmail(dto.getEmail()).isPresent()) {
             throw new RuntimeException("Email já cadastrado");
         }
@@ -71,7 +78,11 @@ public class AuthService {
 
         userRepository.save(user);
 
-        return jwtService.generateToken(user);
+        String accessToken = jwtService.generateToken(user);
+        String refreshToken = refreshTokenService.create(user);
+
+        addAccessTokenCookie(response, accessToken);
+        addRefreshTokenCookie(response, refreshToken);
     }
 
     public AuthUserDTO me() {
@@ -140,7 +151,7 @@ public class AuthService {
         ResponseCookie cookie = ResponseCookie
                 .from("refresh_token", "")
                 .httpOnly(true)
-                .secure(false)
+                .secure(jwtTokenSecure)
                 .sameSite("Lax")
                 .path("/auth/refresh")
                 .maxAge(Duration.ZERO)
@@ -155,7 +166,7 @@ public class AuthService {
         ResponseCookie cookie = ResponseCookie
                 .from("access_token", token)
                 .httpOnly(true)
-                .secure(false) //TODO: em prod isso deve ser true
+                .secure(jwtTokenSecure)
                 .sameSite("Lax")
                 .path("/")
                 .maxAge(Duration.ofMinutes(15))
@@ -170,7 +181,7 @@ public class AuthService {
         ResponseCookie cookie = ResponseCookie
                 .from("refresh_token", token)
                 .httpOnly(true)
-                .secure(false) //TODO: em prod isso deve ser true
+                .secure(jwtTokenSecure)
                 .sameSite("Lax")
                 .path("/auth/refresh")
                 .maxAge(Duration.ofDays(7))
