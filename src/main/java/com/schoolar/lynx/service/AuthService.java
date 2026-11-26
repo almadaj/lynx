@@ -6,6 +6,7 @@ import com.schoolar.lynx.domain.model.User;
 import com.schoolar.lynx.repository.UserCompanyRepository;
 import com.schoolar.lynx.repository.UserRepository;
 import com.schoolar.lynx.security.UserDetailsImpl;
+import com.schoolar.lynx.storage.StorageService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -31,6 +32,7 @@ public class AuthService {
     private final RefreshTokenService refreshTokenService;
     private final PasswordEncoder passwordEncoder;
     private final UserCompanyRepository userCompanyRepository;
+    private final StorageService storageService;
 
     @Value("${jwt.token.secure}")
     private Boolean jwtTokenSecure;
@@ -105,6 +107,12 @@ public class AuthService {
                         "Usuário não encontrado"
                 ));
 
+        String profilePhotoUrl = null;
+
+        if (user.getProfilePhoto() != null && !user.getProfilePhoto().isBlank()) {
+            profilePhotoUrl = storageService.getUrl(user.getProfilePhoto());
+        }
+
         List<UserCompanyResponse> companies =
                 userCompanyRepository.findAllByUserId(user.getId())
                         .stream()
@@ -121,6 +129,7 @@ public class AuthService {
                 .id(user.getId())
                 .name(user.getName())
                 .email(user.getEmail())
+                .profilePhoto(profilePhotoUrl)
                 .companies(companies)
                 .build();
     }

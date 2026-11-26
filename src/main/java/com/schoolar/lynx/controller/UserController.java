@@ -7,6 +7,7 @@ import com.schoolar.lynx.service.UserService;
 import com.schoolar.lynx.storage.StorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -49,12 +50,11 @@ public class UserController {
         return ResponseEntity.ok(service.getOwnInfo());
     }
 
-    @PostMapping("/{id}/photo")
+    @PutMapping(value = "/me/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> uploadProfilePhoto(
-            @PathVariable UUID id,
             @RequestParam("file") MultipartFile file
     ) throws IOException {
-        service.uploadProfilePhoto(id, file);
+        service.uploadProfilePhoto(file);
         return ResponseEntity.noContent().build();
     }
 

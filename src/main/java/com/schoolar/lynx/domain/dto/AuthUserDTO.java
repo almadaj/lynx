@@ -12,5 +12,6 @@ public class AuthUserDTO {
     private UUID id;
     private String name;
     private String email;
+    private String profilePhoto;
     private List<UserCompanyResponse> companies;
 }

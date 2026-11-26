@@ -101,27 +101,29 @@ public class UserService {
     }
 
     @Transactional
-    public void uploadProfilePhoto(UUID id, MultipartFile file) throws IOException {
-        var user = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
-        User loggedUser = authenticatedUserService.get();
-
-        if (loggedUser.getId() != user.getId()){
-            throw new RuntimeException("É possível alterar somente a própria foto de usuário");
+    public void uploadProfilePhoto(MultipartFile file) throws IOException {
+        User user = authenticatedUserService.get();
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("Arquivo não informado");
         }
 
-        if (user.getProfilePhoto() != null) {
-            storageService.delete(user.getProfilePhoto());
-        }
+        String oldPhoto = user.getProfilePhoto();
+        String newPhoto = storageService.upload(
+                file,
+                "users/" + user.getId()
+        );
 
-        String key = storageService.upload(file, "users/" + user.getId());
-        user.setProfilePhoto(key);
+        user.setProfilePhoto(newPhoto);
         repository.save(user);
 
+        if (oldPhoto != null) {
+            storageService.delete(oldPhoto);
+        }
+
         log.info(
-                "Foto de perfil adicionada. userId={}, key={}",
-                id,
-                user.getProfilePhoto()
+                "Foto de perfil atualizada. userId={}, key={}",
+                user.getId(),
+                newPhoto
         );
     }
 
